@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="http://jsbsim.sf.net/JSBSimScript.xsl"?>
+<runscript xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://jsbsim.sf.net/JSBSimScript.xsd"
+    name="Cruise flight in 737.">
+
+  <description>
+    This script trims the aircraft at cruise altitude and mach. Some state
+    data is printed out at the completion of trimming. 
+  </description>
+
+  <use aircraft="sgs233" initialize="sgs_init"/> 
+
+  <run start="0" end="10" dt="0.008333">
+
+    <property value="0"> simulation/notify-time-trigger </property>
+
+    <event name="Reset Initial Conditions"> 
+      <condition> simulation/sim-time-sec ge 0 </condition>
+      <set name="ic/h-sl-ft" value="3280.0"/>
+      <notify>
+        <property caption="Altitude ASL">ic/h-sl-ft</property>
+      </notify>
+    </event>
+   
+
+
+    <event name="Repeating Notify" persistent="true">
+      <description>Output message at 10 second intervals, starting after
+                   trimming is completed.
+      </description>
+      <notify>
+        <property>position/h-agl-ft</property>
+        <property>position/long-gc-deg</property>
+        <property>position/lat-gc-deg</property>
+
+      </notify>
+      <condition >simulation/sim-time-sec ge 0</condition>
+      <set name="simulation/notify-time-trigger" value="10" type="FG_DELTA"/>
+    </event>
+
+  </run>
+
+</runscript>
