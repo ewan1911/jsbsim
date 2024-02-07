@@ -681,7 +681,7 @@ void FGAuxiliary::loadgrid()
   in.close();
 }
 
-
+// on test
 // Ici on rentre dans la boite bigflow à la position initiale : ( 1000 [m] (altitude), 0 [m] (Longueur), 4000 [m] (largeur) )
 // Donc je suis en face de la boite au milieu 
 //
