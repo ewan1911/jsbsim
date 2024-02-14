@@ -61,6 +61,10 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
+int points = 4; //nombre de points de part et d'autre du centre. Ici arbitraire.
+double width = in.Wingspan*0.3048;;
+double dw = width/(2*points);
+
 FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
 {
 
@@ -274,8 +278,7 @@ bool FGAuxiliary::Run(bool Holding)
   //std::cout << "Distance parcourue depuis la position initiale = " << dist_rel << " [m]" <<std::endl;
   //std::cout << "Altitude = " << alt << " [m]" <<std::endl;
 
-
-
+  discretisation(alt, dist_lat, dist_long, points);
 
 
 
@@ -773,7 +776,7 @@ void FGAuxiliary::rechercheNoeuds(double x, double y, double z, double refz, dou
     }
 }
 
-void FGAuxiliary::discretisation(double x, double y, double z){
+void FGAuxiliary::discretisation(double x, double y, double z, int n){
   double D;
   double positions[2*n+1][3];
   
@@ -815,7 +818,7 @@ void FGAuxiliary::discretisation(double x, double y, double z){
 }
 
 FGColumnVector3 velCG;
-FGMatrix33 TranfoNED2B;
+FGMatrix33 TransfoNED2B;
 
 
 void FGAuxiliary::dynamics(double **vBoite, int n) { //n le nombre d'éléments de par et d'autre CG
@@ -826,18 +829,18 @@ void FGAuxiliary::dynamics(double **vBoite, int n) { //n le nombre d'éléments 
 
   double rho = (FDMExec->GetAtmosphere()->GetDensity())*515.378818;
   double b = in.Wingspan*0.3048;
-	double S   = (FDMExec->GetAircraft()->GetWingArea())*0.092903;
-  double AR = b*b/S;
   double c = in.Wingchord*0.3048; //constant pour le moment
+	double S = b*c; //pour le moment
+  double AR = b*b/S;
   double U_inf;
 
-  velCG = in.uUVW*0.3048; //in BODY frame (?)
+  velCG = in.vUVW*0.3048; //in BODY frame (?)
   TransfoNED2B = in.Tl2b;
 
   for (int i = 0; i < 2*n+1; i++)
   {
-    velFlowWing[i] = velCG - TranfoNED2B*vBoite[i];
-    Clift[i] = 2*PI*(AR/(AR+2));
+    velFlowWing[i] = velCG - TransfoNED2B*vBoite[i];
+    Clift[i] = 2*3.14159*(AR/(AR+2));
     alpha_e[i] = atan2(velFlowWing[i][2], velFlowWing[i][0]);
     U_inf = sqrt(velFlowWing[i][2]*velFlowWing[i][2] + velFlowWing[i][0]*velFlowWing[i][0]);
     lift[i] = 0.5*rho*U_inf*U_inf*Clift[i]*c
