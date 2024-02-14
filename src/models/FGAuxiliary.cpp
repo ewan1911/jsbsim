@@ -843,7 +843,7 @@ void FGAuxiliary::dynamics(double **vBoite, int n) { //n le nombre d'éléments 
     Clift[i] = 2*3.14159*(AR/(AR+2));
     alpha_e[i] = atan2(velFlowWing[i][2], velFlowWing[i][0]);
     U_inf = sqrt(velFlowWing[i][2]*velFlowWing[i][2] + velFlowWing[i][0]*velFlowWing[i][0]);
-    lift[i] = 0.5*rho*U_inf*U_inf*Clift[i]*c
+    lift[i] = 0.5*rho*U_inf*U_inf*Clift[i]*c;
   }
 
   double rollMoment = 0.0;
