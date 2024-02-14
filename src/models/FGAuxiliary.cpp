@@ -840,7 +840,7 @@ void FGAuxiliary::dynamics(double **vBoite, int n) { //n le nombre d'éléments 
 
   for (int i = 0; i < 2*n+1; i++)
   {
-    velFlowWing[i] = velCG - TranfoNED2B*vBoite[i];
+    velFlowWing[i] = velCG - TransfoNED2B*vBoite[i];
     Clift[i] = 2*3.141593*(AR/(AR+2));
     alpha_e[i] = atan2(velFlowWing[i][2], velFlowWing[i][0]);
     U_inf = sqrt(velFlowWing[i][2]*velFlowWing[i][2] + velFlowWing[i][0]*velFlowWing[i][0]);

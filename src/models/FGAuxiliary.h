@@ -368,9 +368,11 @@ private:
   void loadwwind();
   double w[128][257][257];
 
+  const int n = 10;
+
   void rechercheNoeuds(double x, double y, double z, double refz, double longi);
-  void discretisation(double x, double y, double z, int n);
-  void dynamics(double **vBoite, int n);
+  void discretisation(double x, double y, double z);
+  void dynamics(double **vBoite);
 
 };
 
