@@ -50,7 +50,7 @@ INCLUDES
 #include "FGInertial.h"
 #include "FGAtmosphere.h"
 
-#define PI = 3.141593
+#define PI  3.141593
 
 using namespace std;
 
