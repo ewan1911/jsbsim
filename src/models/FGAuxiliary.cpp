@@ -819,7 +819,7 @@ void FGAuxiliary::discretisation(double x, double y, double z, int n){
 }
 
 FGColumnVector3 velCG;
-FGMatrix33 TranfoNED2B;
+FGMatrix33 TransfoNED2B;
 
 
 void FGAuxiliary::dynamics(double **vBoite, int n) { //n le nombre d'éléments de par et d'autre CG
@@ -830,18 +830,18 @@ void FGAuxiliary::dynamics(double **vBoite, int n) { //n le nombre d'éléments 
 
   double rho = (FDMExec->GetAtmosphere()->GetDensity())*515.378818;
   double b = in.Wingspan*0.3048;
-	double S   = (FDMExec->GetAircraft()->GetWingArea())*0.092903;
-  double AR = b*b/S;
   double c = in.Wingchord*0.3048; //constant pour le moment
+	double S   = b*c;
+  double AR = b*b/S;
   double U_inf;
 
-  velCG = in.uUVW*0.3048; //in BODY frame (?)
+  velCG = in.vUVW*0.3048; //in BODY frame (?)
   TransfoNED2B = in.Tl2b;
 
   for (int i = 0; i < 2*n+1; i++)
   {
     velFlowWing[i] = velCG - TranfoNED2B*vBoite[i];
-    Clift[i] = 2*PI*(AR/(AR+2));
+    Clift[i] = 2*3.141593*(AR/(AR+2));
     alpha_e[i] = atan2(velFlowWing[i][2], velFlowWing[i][0]);
     U_inf = sqrt(velFlowWing[i][2]*velFlowWing[i][2] + velFlowWing[i][0]*velFlowWing[i][0]);
     lift[i] = 0.5*rho*U_inf*U_inf*Clift[i]*c;
