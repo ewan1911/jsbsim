@@ -369,6 +369,7 @@ private:
   double w[128][257][257];
 
   void rechercheNoeuds(double x, double y, double z, double refz, double longi);
+  void discretisation(double x, double y, double z);
 };
 
 } // namespace JSBSim

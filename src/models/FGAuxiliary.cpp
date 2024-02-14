@@ -50,6 +50,7 @@ INCLUDES
 #include "FGInertial.h"
 #include "FGAtmosphere.h"
 
+#define PI = 3.141593
 
 using namespace std;
 
@@ -770,6 +771,88 @@ void FGAuxiliary::rechercheNoeuds(double x, double y, double z, double refz, dou
     } else {
         std::cout << "La valeur " << z + refz << " n'est pas présente dans le tableau." << std::endl;
     }
+}
+
+void FGAuxiliary::discretisation(double x, double y, double z){
+  double D;
+  double positions[2*n+1][3];
+  
+  double yaw = Propagate->GetEuler(ePhi);
+  double pitch = Propagate->GetEuler(eTht);
+  double roll = Propagate->GetEuler(ePsi);
+
+  double theta = 3.14159/2 + yaw;
+  double phi = 3.14159/2 - roll;
+
+  for (int i = 0; i < 2*n+1; i++)
+  {
+    if (i<=n)
+    {
+      D = (n-i)*dw;
+      positions[i][0] = y - D*sin(phi)*cos(theta);
+      positions[i][1] = z - D*sin(phi)*sin(theta);
+      positions[i][2] = x - D*cos(phi);
+    } else {
+      D = (i-n)*dw;
+      positions[i][0] = y + D*sin(phi)*cos(theta);
+      positions[i][1] = z + D*sin(phi)*sin(theta);
+      positions[i][2] = x + D*cos(phi);
+    }
+    
+  }
+  std::cout << "yaw: " << yaw << " pitch: " << pitch << " roll: " << roll << std::endl;
+  std::cout << "Position tip gauche : (" << positions[0][0] << "," << positions[0][1] << "," << positions[0][2] << ")" << std::endl;
+  std::cout << "(" << positions[1][0] << "," << positions[1][1] << "," << positions[1][2] << ")" << std::endl;
+  std::cout << "(" << positions[2][0] << "," << positions[2][1] << "," << positions[2][2] << ")" << std::endl;
+  std::cout << "(" << positions[3][0] << "," << positions[3][1] << "," << positions[3][2] << ")" << std::endl;
+  std::cout << "Position CG : (" << positions[n][0] << "," << positions[n][1] << "," << positions[n][2] << ")" << std::endl;
+  std::cout << "(" << positions[5][0] << "," << positions[5][1] << "," << positions[5][2] << ")" << std::endl;
+  std::cout << "(" << positions[6][0] << "," << positions[6][1] << "," << positions[6][2] << ")" << std::endl;
+  std::cout << "(" << positions[7][0] << "," << positions[7][1] << "," << positions[7][2] << ")" << std::endl;
+  std::cout << "Position tip droit : (" << positions[2*n][0] << "," << positions[2*n][1] << "," << positions[2*n][2] << ")" << std::endl;
+  std::cout << "-----------------------------------------------------------------------------" << std::endl;
+
+}
+
+FGColumnVector3 velCG;
+FGMatrix33 TranfoNED2B;
+
+
+void FGAuxiliary::dynamics(double **vBoite, int n) { //n le nombre d'éléments de par et d'autre CG
+  double velFlowWing[2*n+1][3];
+  double Clift[2*n+1];
+  double lift[2*n+1];
+  double alpha_e[2*n+1];
+
+  double rho = (FDMExec->GetAtmosphere()->GetDensity())*515.378818;
+  double b = in.Wingspan*0.3048;
+	double S   = (FDMExec->GetAircraft()->GetWingArea())*0.092903;
+  double AR = b*b/S;
+  double c = in.Wingchord*0.3048; //constant pour le moment
+  double U_inf;
+
+  velCG = in.uUVW*0.3048; //in BODY frame (?)
+  TransfoNED2B = in.Tl2b;
+
+  for (int i = 0; i < 2*n+1; i++)
+  {
+    velFlowWing[i] = velCG - TranfoNED2B*vBoite[i];
+    Clift[i] = 2*PI*(AR/(AR+2));
+    alpha_e[i] = atan2(velFlowWing[i][2], velFlowWing[i][0]);
+    U_inf = sqrt(velFlowWing[i][2]*velFlowWing[i][2] + velFlowWing[i][0]*velFlowWing[i][0]);
+    lift[i] = 0.5*rho*U_inf*U_inf*Clift[i]*c
+  }
+
+  double rollMoment = 0.0;
+  for (int i = 0; i < 2*n+1; i++)
+  {
+    if (i<n)
+    {
+      rollMoment += lift[i]*(n-i)*dw;
+    } else {
+      rollMoment -= lift[i]*(i-n)*dw; //lift partie droite de l'aile contribue négativement au rolling moment
+    }
+  }
 }
 
 } // namespace JSBSim
