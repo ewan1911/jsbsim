@@ -278,7 +278,7 @@ bool FGAuxiliary::Run(bool Holding)
   //std::cout << "Distance parcourue depuis la position initiale = " << dist_rel << " [m]" <<std::endl;
   //std::cout << "Altitude = " << alt << " [m]" <<std::endl;
 
-
+  discretisation(alt, dist_lat, dist_long, points);
 
 
 
