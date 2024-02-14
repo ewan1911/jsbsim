@@ -854,7 +854,7 @@ void FGAuxiliary::dynamics(double **vBoite, int n) { //n le nombre d'éléments 
       rollMoment += lift[i]*(n-i)*dw;
     } else {
       rollMoment -= lift[i]*(i-n)*dw; //lift partie droite de l'aile contribue négativement au rolling moment
-    }
+    } //test
   }
 }
 
