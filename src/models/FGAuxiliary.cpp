@@ -776,7 +776,7 @@ void FGAuxiliary::rechercheNoeuds(double x, double y, double z, double refz, dou
 }
 
 void FGAuxiliary::discretisation(double x, double y, double z, int n){
-  double width = in.Wingspan*0.3048;;
+  double width = in.Wingspan*0.3048;
   double dw = width/(2*n);
   double D;
   double positions[2*n+1][3];
@@ -835,7 +835,7 @@ void FGAuxiliary::dynamics(double **vBoite, int n) { //n le nombre d'éléments 
   double AR = b*b/S;
   double U_inf;
 
-  double width = in.Wingspan*0.3048;;
+  double width = in.Wingspan*0.3048;
   double dw = width/(2*n);
 
   velCG = in.vUVW*0.3048; //in BODY frame (?)
