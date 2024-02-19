@@ -264,7 +264,12 @@ bool FGAuxiliary::Run(bool Holding)
 
   double gride = grid[0][0];
 
-  int points = 4; //nombre de points de part et d'autre du centre. Ici arbitraire.
+  int points = 2; //nombre de points de part et d'autre du centre. Ici arbitraire.
+
+  int vBoite[5][3] = {{0, 0, 3}, {0, 0, 2}, {0, 0, 1}, {0, 0, 0}, {0, 0, 0}};
+  
+
+  
 
   rechercheNoeuds(alt, dist_lat, dist_long, 4000.0, lon_deg);
   //std::cout << "-----------------------------------------------------------------------------------" <<std::endl;
@@ -277,6 +282,7 @@ bool FGAuxiliary::Run(bool Holding)
   //std::cout << "Altitude = " << alt << " [m]" <<std::endl;
 
   discretisation(alt, dist_lat, dist_long, points);
+  dynamics(vBoite, points);
 
 
 
@@ -574,7 +580,8 @@ void FGAuxiliary::loaduwind()
   const int dim2 = 257;  
   const int dim3 = 257;  
 
-  std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/u_aplati.csv");
+  //std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/u_aplati.csv");
+  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/jsbsim-code/src/models/atmosphere/u_aplati.csv");
 
   if (in.is_open()) {
       std::cout << "File u opened successfully." << std::endl;
@@ -600,7 +607,8 @@ void FGAuxiliary::loadvwind()
   const int dim2 = 257;  
   const int dim3 = 257;  
 
-  std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/v_aplati.csv");
+  //std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/v_aplati.csv");
+  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/jsbsim-code/src/models/atmosphere/v_aplati.csv");
 
   if (in.is_open()) {
       std::cout << "File v opened successfully." << std::endl;
@@ -626,7 +634,8 @@ void FGAuxiliary::loadwwind()
   const int dim2 = 257;  
   const int dim3 = 257;  
 
-  std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/w_aplati.csv");
+  //std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/w_aplati.csv");
+  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/jsbsim-code/src/models/atmosphere/W_aplati.csv");
 
   if (in.is_open()) {
       std::cout << "File w opened successfully." << std::endl;
@@ -648,7 +657,8 @@ void FGAuxiliary::loadwwind()
 
 void FGAuxiliary::loadgrid() 
 {
-  std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/grid.csv");
+  //std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/grid.csv");
+  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/jsbsim-code/src/models/atmosphere/grid.csv");
 
   if (in.is_open()) {
       std::cout << "File grid opened successfully." << std::endl;
@@ -819,35 +829,42 @@ void FGAuxiliary::discretisation(double x, double y, double z, int n){
 }
 
 FGColumnVector3 velCG;
+FGColumnVector3 vPoint;
+FGColumnVector3 vFlow;
 FGMatrix33 TransfoNED2B;
 
 
-void FGAuxiliary::dynamics(double **vBoite, int n) { //n le nombre d'éléments de par et d'autre CG
-  double velFlowWing[2*n+1][3];
-  double Clift[2*n+1];
+void FGAuxiliary::dynamics(int vBoite[5][3], int n) { //n le nombre d'éléments de par et d'autre CG
   double lift[2*n+1];
-  double alpha_e[2*n+1];
 
   double rho = (FDMExec->GetAtmosphere()->GetDensity())*515.378818;
   double b = in.Wingspan*0.3048;
   double c = in.Wingchord*0.3048; //constant pour le moment
 	double S   = b*c;
   double AR = b*b/S;
-  double U_inf;
 
   double width = in.Wingspan*0.3048;
   double dw = width/(2*n);
+
+  double a_e;
+  double C_l;
+  double U_inf;
 
   velCG = in.vUVW*0.3048; //in BODY frame (?)
   TransfoNED2B = in.Tl2b;
 
   for (int i = 0; i < 2*n+1; i++)
   {
-    velFlowWing[i] = velCG - TransfoNED2B*vBoite[i];
-    Clift[i] = 2*3.141593*(AR/(AR+2));
-    alpha_e[i] = atan2(velFlowWing[i][2], velFlowWing[i][0]);
-    U_inf = sqrt(velFlowWing[i][2]*velFlowWing[i][2] + velFlowWing[i][0]*velFlowWing[i][0]);
-    lift[i] = 0.5*rho*U_inf*U_inf*Clift[i]*c;
+    vPoint(1) = vBoite[i][0];
+    vPoint(2) = vBoite[i][1];
+    vPoint(3) = vBoite[i][2];
+    vFlow = velCG - TransfoNED2B*vPoint;
+    
+    a_e = atan2(vFlow(3), vFlow(1));
+    C_l = 2*3.141593*(AR/(AR+2))*a_e;
+    U_inf = sqrt(vFlow(3)*vFlow(3) + vFlow(1)*vFlow(1));
+
+    lift[i] = 0.5*rho*U_inf*U_inf*C_l*c;
   }
 
   double rollMoment = 0.0;
@@ -855,11 +872,16 @@ void FGAuxiliary::dynamics(double **vBoite, int n) { //n le nombre d'éléments 
   {
     if (i<n)
     {
-      rollMoment += lift[i]*(n-i)*dw;
+      rollMoment -= lift[i]*(n-i)*dw;
     } else {
-      rollMoment -= lift[i]*(i-n)*dw; //lift partie droite de l'aile contribue négativement au rolling moment
+      rollMoment += lift[i]*(i-n)*dw; //lift partie droite de l'aile contribue négativement au rolling moment mais il y a un moins dans la formule.
     }
   }
+
+  std::cout << "-----------------------------------------------------------------------------" << std::endl;
+  std::cout << "Rolling moment = " << rollMoment << " Nm" << std::endl;
+  std::cout << "-----------------------------------------------------------------------------" << std::endl;
+
 }
 
 } // namespace JSBSim

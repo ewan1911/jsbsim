@@ -372,7 +372,7 @@ private:
 
   void rechercheNoeuds(double x, double y, double z, double refz, double longi);
   void discretisation(double x, double y, double z, int n);
-  void dynamics(double **vBoite, int n);
+  void dynamics(int vBoite[5][3], int n);
 
 };
 
