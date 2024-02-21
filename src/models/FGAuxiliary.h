@@ -370,9 +370,11 @@ private:
 
   const int n = 10;
 
-  void rechercheNoeuds(double hauteur, double longueur, double largeur, double refz,double ref_long, double longi);
+  double* rechercheNoeuds(double hauteur, double longueur, double largeur, double refz,double ref_long, double longi);
   void discretisation(double x, double y, double z, int n);
   void dynamics(int vBoite[5][3], int n);
+
+  void getRollMoment(double hauteur, double longueur, double largeur, double longi, int n, double ref_larg, double ref_long);
 
 };
 
