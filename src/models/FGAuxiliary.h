@@ -370,7 +370,7 @@ private:
 
   const int n = 10;
 
-  void rechercheNoeuds(double x, double y, double z, double refz, double longi);
+  void rechercheNoeuds(double hauteur, double longueur, double largeur, double refz,double ref_long, double longi);
   void discretisation(double x, double y, double z, int n);
   void dynamics(int vBoite[5][3], int n);
 

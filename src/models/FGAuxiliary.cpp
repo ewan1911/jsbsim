@@ -271,7 +271,7 @@ bool FGAuxiliary::Run(bool Holding)
 
   
 
-  rechercheNoeuds(alt, dist_lat, dist_long, 4000.0, lon_deg);
+  rechercheNoeuds(alt, dist_lat, dist_long, 4000.0,100.0, lon_deg);
   //std::cout << "-----------------------------------------------------------------------------------" <<std::endl;
   //std::cout << "Long = " << lon_deg << " [°]" <<std::endl;
   //std::cout << "Lat = " << lat_deg << " [°]" <<std::endl;
@@ -701,39 +701,42 @@ void FGAuxiliary::loadgrid()
 //
 //Print les infos de où on est dans la grid de vent 
 //
-void FGAuxiliary::rechercheNoeuds(double x, double y, double z, double refz, double longi) //x,y et z selon la règle de la main droite
+void FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double largeur, double refz,double ref_long, double longi) //x,y et z selon la règle de la main droite
 {    
 
-    double z_bis = z;
-    if (longi>0) // POUR SAVOIR SI ON TOURNE A DROITE OU A GAUCHE 
-    {
-      z *= -1;
-    
-    }
-    // Parcourir le tableau hauteur x
-    int indice1x = -1, indice2x = -1;
+
+    // Parcourir le tableau hauteur 
+    int indice1h = -1, indice2h = -1;
     for (int i = 0; i < 127 - 1; ++i) {
-        if (grid[0][i] <= x && x <= grid[0][i + 1]) {
-            indice1x = i;
-            indice2x = i + 1;
+        if (grid[0][i] <= hauteur && hauteur <= grid[0][i + 1]) {
+            indice1h = i;
+            indice2h = i + 1;
             break;
         }
     }
 
-    // Parcourir le tableau longueur y
+    // Parcourir le tableau longueur 
     int indice1y = -1, indice2y = -1;
     for (int i = 0; i < 256 - 1; ++i) {
-        if (grid[1][i] <= y && y <= grid[1][i + 1]) {
+        if (grid[1][i] <= (longueur + ref_long) && (longueur + ref_long) <= grid[1][i + 1]) {
             indice1y = i;
             indice2y = i + 1;
             break;
         }
     }
 
-    // Parcourir le tableau largeur  z
+
+    double z_bis = largeur;
+    if (longi<0) // SI LONG < 0 ALORS ON TOURNE VERS LA GAUCHE OU ATTENDRE 1 SEC ?
+    {
+      largeur *= -1;
+    
+    }
+    // LE METTRE DEJA DANS LA BOITE SINON PROBLEME AVEC L INTERPOLATION
+    // Parcourir le tableau largeur  
     int indice1z = -1, indice2z = -1;
     for (int i = 0; i < 256 - 1; ++i) {
-        if (grid[2][i] <= z + refz  && z + refz <= grid[2][i + 1]) {
+        if (grid[2][i] <= largeur + refz  && largeur + refz <= grid[2][i + 1]) {
             indice1z = i;
             indice2z = i + 1;
             break;
@@ -744,31 +747,30 @@ void FGAuxiliary::rechercheNoeuds(double x, double y, double z, double refz, dou
 
     // Afficher les indices et les distances
     std::cout << "-----------------------------------------------------------------------------" << std::endl;
-    std::cout << "POSITION INITIALE : Hauteur = 1000 [m], Longueur = 0 [m], Largeur = 4000 [m]" << std::endl;
-
-    if (indice1x != -1 && indice2x != -1) {
-        std::cout << "------------------HAUTEUR------------------" << std::endl;
-        std::cout << "La hauteur " << x << " [m] se trouve entre les noeuds " << indice1x << " ("<<grid[0][indice1x] << "[m]) et " << indice2x<< " ("<<grid[0][indice2x] << "[m])cd " << std::endl;
-        std::cout << "Distance par rapport au noeud " << indice1x << " = " << x - grid[0][indice1x] << "[m] " << std::endl;
-        std::cout << "Distance par rapport au noeud" << indice2x << " = " << grid[0][indice2x] - x << "[m] "<< std::endl;
+    std::cout << "POSITION INITIALE : Hauteur = 1000 [m], Longueur = 100 [m], Largeur = 4000 [m]" << std::endl;
+    
+    std::cout << "------------------HAUTEUR------------------" << std::endl;
+    if (indice1h != -1 && indice2h != -1) {
+        std::cout << "La hauteur " << hauteur << " [m] se trouve entre les noeuds " << indice1h << " ("<<grid[0][indice1h] << "[m]) et " << indice2h<< " ("<<grid[0][indice2h] << "[m])cd " << std::endl;
+        std::cout << "Distance par rapport au noeud " << indice1h << " = " << hauteur - grid[0][indice1h] << "[m] " << std::endl;
+        std::cout << "Distance par rapport au noeud" << indice2h << " = " << grid[0][indice2h] - hauteur << "[m] "<< std::endl;
     } else {
-        std::cout << "La valeur " << x << " n'est pas présente dans le tableau." << std::endl;
+        std::cout << "La valeur " << hauteur << " n'est pas présente dans le tableau." << std::endl;
     }
 
-    
+    std::cout << "----------------AVANT/ARRIERE----------------" << std::endl;
     if (indice1y != -1 && indice2y != -1) {
-        std::cout << "----------------AVANT/ARRIERE----------------" << std::endl;
-        std::cout << "J'ai avance de " << y << " [m] en avant depuis l'entree dans BigFlow  "  << std::endl;
+        std::cout << "J'ai avance de " << longueur  << " [m] en avant depuis l'entree dans BigFlow  "  << std::endl;
         std::cout << "Je me trouve  entre les noeuds " << indice1y << " ("<<grid[1][indice1y] << "[m]) et " << indice2y << " ("<<grid[1][indice2y] << "[m]) " << std::endl;
-        std::cout << "Distance par rapport au noeud " << indice1y << " = " << y - grid[1][indice1y] << "[m] " << std::endl;
-        std::cout << "Distance par rapport au noeud" << indice2y << " = " << grid[1][indice2y] - y << "[m] "<< std::endl;
+        std::cout << "Distance par rapport au noeud " << indice1y << " = " << (longueur + ref_long) - grid[1][indice1y] << "[m] " << std::endl;
+        std::cout << "Distance par rapport au noeud" << indice2y << " = " << grid[1][indice2y] - (longueur+ref_long) << "[m] "<< std::endl;
     } else {
-        std::cout << "La valeur " << y << " n'est pas présente dans le tableau." << std::endl;
+        std::cout << "La valeur " << longueur + ref_long << " n'est pas présente dans le tableau." << std::endl;
     }
 
-    
+    std::cout << "-----------------DROITE/GAUCHE---------------" << std::endl;
     if (indice1z != -1 && indice2z != -1) {
-        std::cout << "-----------------DROITE/GAUCHE---------------" << std::endl;
+        
         if (longi > 0 )
         {
           std::cout << "J'avance vers la droite" << std::endl;
@@ -778,11 +780,100 @@ void FGAuxiliary::rechercheNoeuds(double x, double y, double z, double refz, dou
         }
         std::cout << "J'ai avance de " << z_bis << " [m] depuis l'entree dans BigFlow " << std::endl;
         std::cout << "Je me trouve  entre les noeuds " << indice1z << " ("<<grid[2][indice1z] << "[m]) et " << indice2z << " ("<<grid[2][indice2z] << "[m]) " << std::endl;
-        std::cout << "Distance par rapport au noeud " << indice1z << " = " <<  (z + refz) - grid[2][indice1z] << "[m] " << std::endl;
-        std::cout << "Distance par rapport au noeud " << indice2z << " = " << grid[2][indice2z] - (z + refz) << "[m] "<< std::endl;
+        std::cout << "Distance par rapport au noeud " << indice1z << " = " <<  (largeur + refz) - grid[2][indice1z] << "[m] " << std::endl;
+        std::cout << "Distance par rapport au noeud " << indice2z << " = " << grid[2][indice2z] - (largeur+ refz) << "[m] "<< std::endl;
     } else {
-        std::cout << "La valeur " << z + refz << " n'est pas présente dans le tableau." << std::endl;
+        std::cout << "La valeur " << largeur + refz << " n'est pas présente dans le tableau." << std::endl;
     }
+
+ 
+     // RATIO 
+    double delta_h = hauteur - grid[0][indice1h];
+    double delta_h_1_0 = grid[0][indice2h] - grid[0][indice1h];
+    double ratio_h = delta_h / delta_h_1_0;
+
+    double delta_long = (longueur + ref_long) - grid[1][indice1y];
+    double delta_long_1_0 = grid[1][indice2y] - grid[1][indice1y];
+    double ratio_long = delta_long / delta_long_1_0;
+
+
+    double delta_larg =  (largeur + refz) - grid[2][indice1z];
+    double delta_larg_1_0 = grid[2][indice2z] - grid[2][indice1z];
+    double ratio_larg = delta_larg / delta_larg_1_0;
+
+    //########################################################### u ########################################################################
+    double uc000 = u[indice1h][indice1y][indice1z];
+    double uc100 = u[indice1h][indice1y][indice2z];
+    double uc101 = u[indice2h][indice1y][indice2z];
+    double uc001 = u[indice2h][indice1y][indice1z];
+    double uc011 = u[indice2h][indice2y][indice1z];
+    double uc111 = u[indice2h][indice2y][indice2z];
+    double uc110 = u[indice1h][indice2y][indice2z];
+    double uc010 = u[indice1h][indice2y][indice1z]; 
+
+    // ALONG Xu 
+    double uc00 = uc000 * (1-ratio_larg) + uc100 * ratio_larg;
+    double uc01 = uc001 * (1-ratio_larg) + uc101 * ratio_larg;
+    double uc10 = uc010 * (1-ratio_larg) + uc110 * ratio_larg;
+    double uc11 = uc011 * (1-ratio_larg) + uc111 * ratio_larg;
+
+    //ALONG Yu
+    double uc0 = uc00 * (1-ratio_long) + uc10 * ratio_long;
+    double uc1 = uc01 * (1-ratio_long) + uc11 * ratio_long;
+
+    // ALONG Zu
+    double uc = uc0 * (1-ratio_h) + uc1 * ratio_h;
+
+    //########################################################### v ########################################################################
+    double vc000 = v[indice1h][indice1y][indice1z];
+    double vc100 = v[indice1h][indice1y][indice2z];
+    double vc101 = v[indice2h][indice1y][indice2z];
+    double vc001 = v[indice2h][indice1y][indice1z];
+    double vc011 = v[indice2h][indice2y][indice1z];
+    double vc111 = v[indice2h][indice2y][indice2z];
+    double vc110 = v[indice1h][indice2y][indice2z];
+    double vc010 = v[indice1h][indice2y][indice1z]; 
+
+    // ALONG Xv 
+    double vc00 = vc000 * (1-ratio_larg) + vc100 * ratio_larg;
+    double vc01 = vc001 * (1-ratio_larg) + vc101 * ratio_larg;
+    double vc10 = vc010 * (1-ratio_larg) + vc110 * ratio_larg;
+    double vc11 = vc011 * (1-ratio_larg) + vc111 * ratio_larg;
+
+    //ALONG Yv
+    double vc0 = vc00 * (1-ratio_long) + vc10 * ratio_long;
+    double vc1 = vc01 * (1-ratio_long) + vc11 * ratio_long;
+
+    // ALONG Zv
+    double vc = vc0 * (1-ratio_h) + vc1 * ratio_h;
+
+    //########################################################### w ########################################################################
+    double wc000 = w[indice1h][indice1y][indice1z];
+    double wc100 = w[indice1h][indice1y][indice2z];
+    double wc101 = w[indice2h][indice1y][indice2z];
+    double wc001 = w[indice2h][indice1y][indice1z];
+    double wc011 = w[indice2h][indice2y][indice1z];
+    double wc111 = w[indice2h][indice2y][indice2z];
+    double wc110 = w[indice1h][indice2y][indice2z];
+    double wc010 = w[indice1h][indice2y][indice1z]; 
+
+    // ALONG Xw 
+    double wc00 = wc000 * (1-ratio_larg) + wc100 * ratio_larg;
+    double wc01 = wc001 * (1-ratio_larg) + wc101 * ratio_larg;
+    double wc10 = wc010 * (1-ratio_larg) + wc110 * ratio_larg;
+    double wc11 = wc011 * (1-ratio_larg) + wc111 * ratio_larg;
+
+    //ALONG Yw
+    double wc0 = wc00 * (1-ratio_long) + wc10 * ratio_long;
+    double wc1 = wc01 * (1-ratio_long) + wc11 * ratio_long;
+
+    // ALONG Zw
+    double wc = wc0 * (1-ratio_h) + wc1 * ratio_h;
+
+    std::cout << "-----------------vitesses (u,v,w) [m/s]--------------------" << std::endl;
+    std::cout << "(" << uc << ", " << vc << ", " << wc << ")" <<std::endl;
+    std::cout << "-----------------------------------------------------------" << std::endl;
+
 }
 
 void FGAuxiliary::discretisation(double x, double y, double z, int n){
