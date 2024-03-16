@@ -39,10 +39,15 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGAircraft.h"
+#include "FGFCS.h"
 #include "input_output/FGXMLElement.h"
+
+#include "FGFDMExec.h"
 
 //INCLUDE DE AUXILIARY
 #include "models/FGAuxiliary.h"
+
+#define PI 3.14159
 
 using namespace std;
 
@@ -54,6 +59,9 @@ CLASS IMPLEMENTATION
 
 FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex)
 {
+  /* std::shared_ptr<JSBSim::FGAuxiliary>auxiliaryPtr = fdmex->GetAuxiliary(); // VOIR CHATGPT JSBSIM CODE EXPL
+  Auxiliary = auxiliaryPtr.get(); */
+
   Name = "FGAircraft";
   WingSpan = 0.0;
   WingArea = 0.0;
@@ -85,6 +93,10 @@ bool FGAircraft::InitModel(void)
   vForces.InitMatrix();
   vMoments.InitMatrix();
 
+  /* int form = 1;
+  double pos = 10.0;
+  FDMExec->GetFCS()->SetDePos(form, pos); */
+
   return true;
 }
 
@@ -103,11 +115,49 @@ bool FGAircraft::Run(bool Holding)
   vForces += in.ExternalForce;
   vForces += in.BuoyantForce;
 
+  /* FGColumnVector3 addedLift = FDMExec->GetAuxiliary()->resultLift(); //fontionne avec l'erreur
+  vForces += addedLift; */
+
   vMoments = in.AeroMoment;
   vMoments += in.PropMoment;
   vMoments += in.GroundMoment;
   vMoments += in.ExternalMoment;
   vMoments += in.BuoyantMoment;
+
+  FGColumnVector3 addedMoment = FDMExec->GetAuxiliary()->resultMoment(); //fontionne avec l'erreur
+  vMoments += addedMoment;
+
+  /* double roll_error = 0.0;
+  double integral_roll = 0.0;
+  double derivative_roll = 0.0;
+  double previous_roll_error = 0.0;
+
+  // Gains PID 
+  double roll_p_gain = 0.6;
+  double roll_i_gain = 0.4;
+  double roll_d_gain = 0.3;
+
+  double roll_angle = FDMExec->GetPropagate()->GetEuler(1);
+  double desired_roll_angle = 0.0;
+
+  roll_error = desired_roll_angle - roll_angle;
+
+  // Terme proportionnel
+  double p_term = roll_p_gain * roll_error;
+
+  // Terme intégral
+  integral_roll += roll_error;
+
+  // Terme dérivatif
+  derivative_roll = roll_error - previous_roll_error;
+
+  double aileron_command = p_term + (roll_i_gain * integral_roll) + (roll_d_gain * derivative_roll);
+
+  previous_roll_error = roll_error;
+
+  aileron_command = std::max(0.0, std::min(1.0, aileron_command)); */
+
+  //FDMExec->GetFCS()->SetDaCmd(aileron_command);
 
   RunPostFunctions();
 
@@ -252,6 +302,47 @@ void FGAircraft::Debug(int from)
   if (debug_lvl & 64) {
     if (from == 0) { // Constructor
     }
+  }
+}
+
+void FGAircraft::virage(double time1, double time2, double angle)
+{
+  // Variables de PID
+  double roll_error = 0.0;
+  double integral_roll = 0.0;
+  double derivative_roll = 0.0;
+  double previous_roll_error = 0.0;
+ 
+  // Gains PID
+  double roll_p_gain = 0.6;
+  double roll_i_gain = 0.2;
+  double roll_d_gain = 0.0;
+ 
+  double roll_angle = FDMExec->GetPropagate()->GetEuler(1)* 180/PI;
+  double desired_roll_angle = angle;
+ 
+  roll_error = desired_roll_angle - roll_angle;
+ 
+  // Terme proportionnel
+  double p_term = roll_p_gain * roll_error;
+ 
+  // Terme intégral
+  integral_roll += roll_error;
+ 
+  // Terme dérivatif
+  derivative_roll = roll_error - previous_roll_error;
+ 
+  double aileron_command = p_term + (roll_i_gain * integral_roll) + (roll_d_gain * derivative_roll);
+  double trim_command = -p_term;
+ 
+  previous_roll_error = roll_error;
+ 
+  double T  = FDMExec->GetSimTime();
+ 
+  if (time1 <= T && T< time2)
+  {
+    FDMExec->GetFCS()->SetDaCmd(aileron_command);
+    FDMExec->GetFCS()->SetRollTrimCmd(trim_command);
   }
 }
 

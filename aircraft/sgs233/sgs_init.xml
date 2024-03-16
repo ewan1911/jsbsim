@@ -4,12 +4,12 @@
     This file sets up the aircraft to start off
     at cruise conditions.
   -->
-  <altitude unit="FT"> 3280.0 </altitude>
-  <vt unit="FT/SEC">     91.0 </vt>
+  <altitude unit="FT"> 2000.0 </altitude> 
+  <vt unit="FT/SEC">     200.0 </vt>
   <gamma unit="DEG">       0.0 </gamma>
   <latitude unit="DEG">   0.0 </latitude>
   <longitude unit="DEG"> 0.0 </longitude>
   <phi unit="DEG">         0.0 </phi>
-  <psi unit="DEG">       0.0 </psi> <!--Yaw angle je pense-->
+  <psi unit="DEG">       45.0 </psi> <!--Yaw angle je pense-->
   <beta unit="DEG">        0.0 </beta>
 </initialize>

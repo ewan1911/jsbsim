@@ -9,9 +9,9 @@
     data is printed out at the completion of trimming. 
   </description>
 
-  <use aircraft="sgs233" initialize="sgs_init"/> 
+  <use aircraft="sgs126" initialize="sgs_init"/> 
 
-  <run start="0" end="10" dt="0.008333">
+  <run start="0" end="400" dt="0.08333">
 
     <property value="0"> simulation/notify-time-trigger </property>
 
@@ -22,23 +22,20 @@
         <property caption="Altitude ASL">ic/h-sl-ft</property>
       </notify>
     </event>
-   
 
-
-    <event name="Repeating Notify" persistent="true">
-      <description>Output message at 10 second intervals, starting after
-                   trimming is completed.
-      </description>
+     
+<!--     <event name="Set roll autopilot">
+      <condition>simulation/sim-time-sec ge 5.0</condition>
+      <set name="ap/attitude_hold" value="1"/>
       <notify>
-        <property>position/h-agl-ft</property>
-        <property>position/long-gc-deg</property>
-        <property>position/lat-gc-deg</property>
-
+          <property>velocities/vc-kts</property>
+          <property>position/h-agl-ft</property>
       </notify>
-      <condition >simulation/sim-time-sec ge 0</condition>
-      <set name="simulation/notify-time-trigger" value="10" type="FG_DELTA"/>
     </event>
+       -->
+    
 
   </run>
+
 
 </runscript>

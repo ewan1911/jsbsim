@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<initialize name="cruise">
+  <!--
+    This file sets up the aircraft to start off
+    at cruise conditions.
+  -->
+  <altitude unit="M"> 1500.0 </altitude> 
+  <vt unit="FT/SEC">     91.0 </vt>
+  <gamma unit="DEG">       0.0 </gamma> <!--Pitch angle-->
+  <latitude unit="DEG">   0.0 </latitude>
+  <longitude unit="DEG"> 0.0 </longitude>
+  <phi unit="DEG">         0.0 </phi> <!--Yaw angle-->
+  <psi unit="DEG">       10.0 </psi> <!--Roll angle-->
+  <beta unit="DEG">        0.0 </beta>
+</initialize>

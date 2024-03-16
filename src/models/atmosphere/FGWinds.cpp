@@ -48,6 +48,8 @@ INCLUDES
 #include "math/FGTable.h"
 #include <fstream>
 
+#include "models/FGAuxiliary.h"
+
 using namespace std;
 
 namespace JSBSim {
@@ -168,13 +170,7 @@ bool FGWinds::Run(bool Holding)
   if (oneMinusCosineGust.gustProfile.Running) CosineGust();
 
 
-  FGColumnVector3 addedWind;
-
-  addedWind(eNorth)= 70.0;
-  addedWind(eEast)= 50.0;
-  addedWind(eDown)= -20;
-  
-
+  FGColumnVector3 addedWind = FDMExec->GetAuxiliary()->getCGWinds();
 
 
   // ECEF:  -7559861.763771 , 12098307.815341 , 15298479.890727 (x,y,z, in ft) initial
@@ -679,7 +675,7 @@ void FGWinds::loaduwind()
   if (in.is_open()) {
       std::cout << "File u opened successfully." << std::endl;
   } else {
-      std::cerr << "Error uopening file zebi." << std::endl;
+      std::cerr << "Error u opening file zebi." << std::endl;
       return;
   }
 
@@ -731,7 +727,7 @@ void FGWinds::loadvwind()
   if (in.is_open()) {
       std::cout << "File w opened successfully." << std::endl;
   } else {
-      std::cerr << "Error w  opening file zebi." << std::endl;
+      std::cerr << "Error w opening file zebi." << std::endl;
       return;
   }
 
@@ -753,7 +749,7 @@ void FGWinds::loadvwind()
   if (in.is_open()) {
       std::cout << "File grid opened successfully." << std::endl;
   } else {
-      std::cerr << "Error grid  opening file zebi." << std::endl;
+      std::cerr << "Error grid opening file zebi." << std::endl;
       return;
   }
 

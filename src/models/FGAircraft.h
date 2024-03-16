@@ -193,6 +193,8 @@ private:
   void bind(void);
   void unbind(void);
   void Debug(int from) override;
+
+  void virage(double time1, double time2, double angle);
 };
 
 } // namespace JSBSim

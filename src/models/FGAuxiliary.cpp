@@ -50,7 +50,9 @@ INCLUDES
 #include "FGInertial.h"
 #include "FGAtmosphere.h"
 
-#define PI  3.141593
+#include "FGFCS.h"
+
+#define PI 3.141593
 
 using namespace std;
 
@@ -134,10 +136,12 @@ bool FGAuxiliary::InitModel(void)
   // 
 
   
-  loaduwind();
-  loadvwind();
-  loadwwind();
-  loadgrid();
+  //loaduwind();
+  //loadvwind();
+  //loadwwind();
+  //loadgrid();
+  std::cout << "-----------------------------------------TEST--------------------------------------" <<std::endl;
+
 
   return true;
 }
@@ -150,6 +154,8 @@ FGAuxiliary::~FGAuxiliary()
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+int points;
 
 bool FGAuxiliary::Run(bool Holding)
 {
@@ -251,12 +257,15 @@ bool FGAuxiliary::Run(bool Holding)
   // FONCTION RAJOUTEES
 
   double dist_long = GetLongitudeRelativePosition() * 0.3048;
+  ajouterDonnees("Zzz_East",dist_long);
 
   double dist_lat = GetLatitudeRelativePosition() * 0.3048;
+  ajouterDonnees("Zzz_North",dist_lat);
 
   double dist_rel = GetDistanceRelativePosition() * 0.3048;
 
   double alt = Propagate->GetAltitudeASL()*0.3048;
+  ajouterDonnees("Zzz_Alt",alt);
 
   double lon_deg = Propagate->GetLongitudeDeg();
 
@@ -264,11 +273,12 @@ bool FGAuxiliary::Run(bool Holding)
 
   double gride = grid[0][0];
 
-  int points = 2; //nombre de points de part et d'autre du centre. Ici arbitraire.
+  points = 40; //nombre de points de part et d'autre du centre. Ici arbitraire.
 
   int vBoite[5][3] = {{0, 0, 3}, {0, 0, 2}, {0, 0, 1}, {0, 0, 0}, {0, 0, 0}};
   
-
+  double East_init = 4000.0;
+  double North_init = 100.0;
   
 
   /* rechercheNoeuds(alt, dist_lat, dist_long, 4000.0,100.0, lon_deg);
@@ -284,7 +294,9 @@ bool FGAuxiliary::Run(bool Holding)
   discretisation(alt, dist_lat, dist_long, points);
   dynamics(vBoite, points); */
 
-  getRollMoment(alt, dist_lat, dist_long, lon_deg, points, 4000.0, 100.0);
+  //getRollMoment(alt, dist_lat, dist_long, lon_deg, points, 4000.0, 100.0);
+
+  //goTo(300.0, 800.0, dist_long, dist_lat);
 
 
   // Hello I'm Simon and I'm from Belgium 
@@ -610,6 +622,8 @@ void FGAuxiliary::loadvwind()
   //std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/v_aplati.csv");
   std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/jsbsim-code/src/models/atmosphere/v_aplati_1.csv");
 
+  std::cout << "TEST" << std::endl;
+
   if (in.is_open()) {
       std::cout << "File v opened successfully." << std::endl;
   } else {
@@ -744,7 +758,7 @@ double* FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double lar
 
 
     // Afficher les indices et les distances
-    /* std::cout << "-----------------------------------------------------------------------------" << std::endl;
+    std::cout << "-----------------------------------------------------------------------------" << std::endl;
     std::cout << "POSITION INITIALE : Hauteur = 1000 [m], Longueur = 100 [m], Largeur = 4000 [m]" << std::endl;
     
     std::cout << "------------------HAUTEUR------------------" << std::endl;
@@ -782,7 +796,7 @@ double* FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double lar
         std::cout << "Distance par rapport au noeud " << indice2z << " = " << grid[2][indice2z] - (largeur+ refz) << "[m] "<< std::endl;
     } else {
         std::cout << "La valeur " << largeur + refz << " n'est pas présente dans le tableau." << std::endl;
-    } */
+    }
 
  
      // RATIO 
@@ -868,9 +882,9 @@ double* FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double lar
     // ALONG Zw
     double wc = wc0 * (1-ratio_h) + wc1 * ratio_h;
 
-    std::cout << "-----------------vitesses (u,v,w) [m/s]--------------------" << std::endl;
+    /* std::cout << "-----------------vitesses (u,v,w) [m/s]--------------------" << std::endl;
     std::cout << "(" << uc << ", " << vc << ", " << wc << ")" <<std::endl;
-    std::cout << "-----------------------------------------------------------" << std::endl;
+    std::cout << "-----------------------------------------------------------" << std::endl; */
 
     double velocities[3] = {uc, vc, wc};
 
@@ -921,12 +935,14 @@ double* FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double lar
 } */
 
 FGColumnVector3 velCG;
-FGColumnVector3 vPoint;
+FGColumnVector3 velCGBox;
+FGColumnVector3 vPointNED;
+FGColumnVector3 vPointBody;
 FGColumnVector3 vFlow;
 FGMatrix33 TransfoNED2B;
 
 
-void FGAuxiliary::dynamics(int vBoite[5][3], int n) { //n le nombre d'éléments de par et d'autre CG
+/* void FGAuxiliary::dynamics(int vBoite[5][3], int n) { //n le nombre d'éléments de par et d'autre CG
   double lift[2*n+1];
 
   double rho = (FDMExec->GetAtmosphere()->GetDensity())*515.378818;
@@ -974,7 +990,10 @@ void FGAuxiliary::dynamics(int vBoite[5][3], int n) { //n le nombre d'éléments
   std::cout << "Rolling moment = " << rollMoment << " Nm" << std::endl;
   std::cout << "-----------------------------------------------------------------------------" << std::endl;
 
-}
+} */
+
+FGColumnVector3 boxMoment;
+FGColumnVector3 liftForce;
 
 void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur, double longi, int n, double ref_larg, double ref_long){
   double width = in.Wingspan*0.3048;
@@ -983,9 +1002,9 @@ void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur,
   double positions[2*n+1][3];
   double vBoite[2*n+1][3];
   
-  double yaw = Propagate->GetEuler(ePhi);
-  double pitch = Propagate->GetEuler(eTht);
-  double roll = Propagate->GetEuler(ePsi);
+  double yaw = Propagate->GetEuler(3); //ordre yaw, pitch, roll
+  double pitch = Propagate->GetEuler(2);
+  double roll = Propagate->GetEuler(1);
 
   double theta = 3.14159/2 + yaw;
   double phi = 3.14159/2 - roll;
@@ -1001,6 +1020,9 @@ void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur,
   double a_e;
   double C_l;
   double U_inf;
+
+  double largeur_init = 1890.0;
+  double longueur_init = 100.0;
 
   velCG = in.vUVW*0.3048; //in BODY frame (?)
   TransfoNED2B = in.Tl2b;
@@ -1034,7 +1056,7 @@ void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur,
 
   for (int i = 0; i < 2*n+1; i++)
   {
-    double* vel = rechercheNoeuds(positions[i][2], positions[i][0], positions[i][1], ref_larg, ref_long, longi);
+    double* vel = rechercheNoeuds(positions[i][2], positions[i][0], positions[i][1], largeur_init, longueur_init, longi);
     vBoite[i][0] = vel[0];
     vBoite[i][1] = vel[1];
     vBoite[i][2] = vel[2];
@@ -1042,23 +1064,40 @@ void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur,
 
   for (int i = 0; i < 2*n+1; i++)
   {
-    vPoint(1) = vBoite[i][1];
-    vPoint(2) = -vBoite[i][2];
-    vPoint(3) = -vBoite[i][0];
-    vFlow = velCG - TransfoNED2B*vPoint; //A modifier
+    vPointNED(1) =  vBoite[i][1];
+    vPointNED(2) = -vBoite[i][2];
+    vPointNED(3) = -vBoite[i][0];
 
-    std::cout << "velCG = " << velCG << " vFlow = " << vFlow << std::endl;
+    vPointBody = TransfoNED2B*vPointNED;
+
+    if (i == n)
+    {
+      velCGBox = vPointBody;
+    }
     
-    a_e = atan2(vFlow(3), vFlow(1));
+
+    vFlow(1) = velCG(1) + vPointBody(1); 
+    vFlow(2) = velCG(2) + vPointBody(2);
+    vFlow(3) = velCG(3) + vPointBody(3); //Frame pointe vers le bas, d'où le - plus bas pour a_e 
+
+    /* std::cout << "yaw = " << yaw << " roll = " << roll << " pitch = " << pitch << std::endl;
+    std::cout << "vPointNED = " << vPointNED << " vPointBody = " << vPointBody << std::endl;
+    std::cout << "velCG = " << velCG << " vFlow = " << vFlow << std::endl;
+    //std::cout << TransfoNED2B << std::endl; */
+
+    a_e = atan2(-vFlow(3), vFlow(1));
     C_l = 2*3.141593*(AR/(AR+2))*a_e;
     U_inf = sqrt(vFlow(3)*vFlow(3) + vFlow(1)*vFlow(1));
 
-    lift[i] = 0.5*rho*U_inf*U_inf*C_l*c;
+    lift[i] = 0.5*rho*U_inf*U_inf*C_l*c*dw;
   }
 
   double rollMoment = 0.0;
+  double totalLift = 0.0;
+
   for (int i = 0; i < 2*n+1; i++)
   {
+    totalLift += lift[i]; //lift local de l'élément fois la surface de cet élément.
     if (i<n)
     {
       rollMoment += lift[i]*(n-i)*dw;
@@ -1067,11 +1106,154 @@ void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur,
     }
   }
 
+  boxMoment(1) = rollMoment;
+  boxMoment(2) = 0.0;
+  boxMoment(3) = 0.0;
+
+  liftForce(1) = 0.0;
+  liftForce(2) = 0.0;
+  liftForce(3) = totalLift;
+
   std::cout << "-----------------------------------------------------------------------------" << std::endl;
-  std::cout << lift[0] << lift[1] << lift[2] << lift[3] << lift[4] << std::endl;
+  //std::cout << lift[0] << " " << lift[1] << " " << lift[2] << " " << lift[3] << " " << lift[4] << std::endl;
+  std::cout << "yaw = " << yaw << " roll = " << roll << " pitch = " << pitch << std::endl;
+  std::cout << "velCG = " << velCG << " vFlow = " << vFlow << std::endl;
   std::cout << "Rolling moment = " << rollMoment << " Nm" << std::endl;
   std::cout << "-----------------------------------------------------------------------------" << std::endl;
+}
 
+FGColumnVector3 FGAuxiliary::resultMoment() {
+  return boxMoment;
+}
+
+FGColumnVector3 FGAuxiliary::getCGWinds(){
+  return velCGBox;
+}
+
+
+void FGAuxiliary::goTo(double x2, double y2, double x1, double y1) {
+  double psi1 = FDMExec->GetPropagate()->GetEuler(3); //Yaw de l'avion
+  double psi2; //Angle entre axe nord et droite vers point visé
+
+  double errorPsi;
+
+  if (x1 <= x2)
+  {
+    if (y1 <= y2)
+    {
+      psi2 = atan2(x2-x1, y2-y1);
+      if (psi1 >= PI+psi2 && psi1 < 2*PI)
+      {
+        errorPsi = -((2*PI - psi1) + psi2); //négatif car on veut qu'il aille à droite
+      } else 
+      {
+        errorPsi = psi1 - psi2;
+      }
+      
+    } 
+    else 
+    {
+      psi2 = PI - atan2(x2-x1, y1-y2);
+      if (psi1 >= PI+psi2 && psi1 < 2*PI)
+      {
+        errorPsi = -((2*PI - psi1) + psi2);
+      } 
+      else 
+      {
+        errorPsi = psi1 - psi2;
+      }
+    }
+  } 
+  else 
+  {
+    if (y1 <= y2)
+    {
+      psi2 = 2*PI - atan2(x1-x2, y2-y1);
+      if (psi1 >= 0 && psi1 < psi2-PI)
+      {
+        errorPsi = psi1 + (2*PI - psi2);
+      }
+      else
+      {
+        errorPsi = psi1 - psi2;
+      }
+      
+    } else 
+    {
+      psi2 = PI + atan2(x1-x2, y1-y2);
+      if (psi1 >= 0 && psi1 < psi2-PI)
+      {
+        errorPsi = psi1 + (2*PI - psi2);
+      }
+      else
+      {
+        errorPsi = psi1 - psi2;
+      }
+      
+    }
+  }
+  
+  double gainP = 0.2;
+  double pGoTo = gainP*errorPsi;
+
+  /* if (psi1 >= psi2)
+  {
+    pGoTo = gainP*errorPsi;
+  } 
+  else 
+  {
+    pGoTo = -gainP*errorPsi;
+  } */
+  
+  double ailerons = pGoTo;
+
+  FDMExec->GetFCS()->SetDaCmd(ailerons);
+
+  double a_R = FDMExec->GetFCS()->GetDaRPos();
+  double T = FDMExec->GetSimTime();
+  double rolleee = FDMExec->GetPropagate()->GetEuler(1);
+  ajouterDonnees("Zzz_aR", a_R);
+  ajouterDonnees("Zzz_Time", T);
+  ajouterDonnees("Zzz_Roll", rolleee);
+
+  
+  std::cout << "-----------------------------------------------------------------------------" << std::endl;
+  std::cout << x1 << " " << psi1 << " " << psi2 << " " << " delta Yaw = " << errorPsi << " " << ailerons << std::endl;
+  
+}
+
+void FGAuxiliary::initialiserFichier(const std::string& nomFichier) {
+    // Ouvrir un fichier en mode création
+    std::ofstream fichier(nomFichier);
+
+    // Vérifier si le fichier est ouvert avec succès
+    if (fichier.is_open()) {
+        std::cout << "Fichier cree avec succes." << std::endl;
+
+        // Fermer le fichier
+        fichier.close();
+    } else {
+        std::cerr << "Impossible de creer le fichier." << std::endl;
+    }
+}
+
+void FGAuxiliary::ajouterDonnees(const std::string& nomFichier,double valeur) {
+    // Ouvrir le fichier en mode ajout
+    const std::string chemin = "/Users/Simon/Documents/Aaa_Thesis/git_jsbsim/jsbsim/";
+
+    std::ofstream fichier(chemin + nomFichier + ".txt", std::ios::app);
+
+    // Vérifier si le fichier est ouvert avec succès
+    if (fichier.is_open()) {
+        // Ajouter des données au fichier
+        fichier  << valeur << std::endl;
+
+        // Fermer le fichier
+        fichier.close();
+        //std::cout << "Donnees ajoutees avec succes." << std::endl;
+    } else {
+        std::cerr << "Impossible d'ouvrir le fichier pour ajout." << std::endl;
+    }
 }
 
 } // namespace JSBSim
