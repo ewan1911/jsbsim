@@ -296,16 +296,9 @@ bool FGAuxiliary::Run(bool Holding)
 
   //getRollMoment(alt, dist_lat, dist_long, lon_deg, points, 4000.0, 100.0);
 
-  //goTo(300.0, 800.0, dist_long, dist_lat);
+  goTo(1000.0, 400.0, dist_long, dist_lat);
 
-
-  // Hello I'm Simon and I'm from Belgium 
-
-
-
-
-
-
+  // Hello I'm Simon and I'm from Belgium
   return false;
 }
 
@@ -1130,7 +1123,6 @@ FGColumnVector3 FGAuxiliary::getCGWinds(){
   return velCGBox;
 }
 
-
 void FGAuxiliary::goTo(double x2, double y2, double x1, double y1) {
   double psi1 = FDMExec->GetPropagate()->GetEuler(3); //Yaw de l'avion
   double psi2; //Angle entre axe nord et droite vers point visé
@@ -1177,7 +1169,6 @@ void FGAuxiliary::goTo(double x2, double y2, double x1, double y1) {
       {
         errorPsi = psi1 - psi2;
       }
-      
     } else 
     {
       psi2 = PI + atan2(x1-x2, y1-y2);
@@ -1189,12 +1180,47 @@ void FGAuxiliary::goTo(double x2, double y2, double x1, double y1) {
       {
         errorPsi = psi1 - psi2;
       }
-      
     }
   }
+
+  errorInt += errorPsi;
   
-  double gainP = 0.2;
-  double pGoTo = gainP*errorPsi;
+  double gainP = 0.005;
+  double gainI = 0.0;
+  double gainD = 20.0;
+
+  double P = -gainP*errorPsi;
+  double I = -gainI*errorInt;
+  double D;
+  if (prevError == 0.0)
+  {
+    D = 0.0;
+  } else 
+  {
+    if (psi1 >= psi2)
+    {
+      D = gainD*(errorPsi - prevError); //ramene vers la droite (<0)
+    } else {
+      D = -gainD*(errorPsi - prevError); //ramene vers la gauche (>0)
+    }
+  }
+
+  prevError = errorPsi;
+
+  double pGoTo = P + I + D;
+
+  double outputMax = 1.0;
+
+  if (pGoTo >= 0.0)
+  {
+    pGoTo = std::min(pGoTo, outputMax);
+  } 
+  else
+  {
+    pGoTo = std::max(pGoTo, -outputMax);
+  }
+  
+  
 
   /* if (psi1 >= psi2)
   {
@@ -1219,7 +1245,8 @@ void FGAuxiliary::goTo(double x2, double y2, double x1, double y1) {
   
   std::cout << "-----------------------------------------------------------------------------" << std::endl;
   std::cout << x1 << " " << psi1 << " " << psi2 << " " << " delta Yaw = " << errorPsi << " " << ailerons << std::endl;
-  
+  std::cout << T << " " << errorInt << " prev: " << prevError << std::endl;
+  std::cout << "P: " << P << " I: " << I << " D: " << D << std::endl;
 }
 
 void FGAuxiliary::initialiserFichier(const std::string& nomFichier) {

@@ -48,7 +48,7 @@ ax1.set_ylabel('North [m]')
 ax1.set_title(' 2D : North en fonction de East')
 #ax1.scatter(data2[0], data1[0], color='green', label='Début', s=70, zorder=5)
 #ax1.scatter(data2[-1], data1[-1], color='red', label='Fin', s=70, zorder=5)
-ax1.scatter(300.0, 800.0, color = 'purple', label = 'target', s = 70)
+ax1.scatter(1000.0, 400.0, color = 'purple', label = 'target', s = 70)
 
 
 ax2.plot(data1, data3)
@@ -69,8 +69,8 @@ plt.show()
 
 plt.figure("aileron R position overtime")
 
-plt.plot(data1, data_aR)
-#plt.plot(data_T, dara_roll)
+plt.plot(data_T, data_aR)
+plt.plot(data_T, dara_roll)
 plt.plot()
 plt.grid()
 plt.show()

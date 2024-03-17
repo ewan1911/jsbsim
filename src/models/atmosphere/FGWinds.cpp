@@ -170,7 +170,7 @@ bool FGWinds::Run(bool Holding)
   if (oneMinusCosineGust.gustProfile.Running) CosineGust();
 
 
-  FGColumnVector3 addedWind = FDMExec->GetAuxiliary()->getCGWinds();
+  //FGColumnVector3 addedWind = FDMExec->GetAuxiliary()->getCGWinds();
 
 
   // ECEF:  -7559861.763771 , 12098307.815341 , 15298479.890727 (x,y,z, in ft) initial
@@ -191,7 +191,7 @@ bool FGWinds::Run(bool Holding)
 
 
 
-  vTotalWindNED = vWindNED + vGustNED + vCosineGust + vTurbulenceNED + addedWind;
+  vTotalWindNED = vWindNED + vGustNED + vCosineGust + vTurbulenceNED; //+ addedWind;
 
    // psiw (Wind heading) is the direction the wind is blowing towards
   if (vWindNED(eX) != 0.0) psiw = atan2( vWindNED(eY), vWindNED(eX) );

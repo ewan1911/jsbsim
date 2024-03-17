@@ -282,7 +282,7 @@ public:
   void SetAeroPQR(const FGColumnVector3& tt) { vAeroPQR = tt; }
 
   FGColumnVector3 resultMoment();
-  FGColumnVector3 FGAuxiliary::getCGWinds();
+  FGColumnVector3 getCGWinds();
 
   struct Inputs {
     double Pressure;
@@ -382,6 +382,9 @@ private:
   void initialiserFichier(const std::string& nomFichier);
   void ajouterDonnees(const std::string& nomFichier,double valeur);
   void goTo(double x2, double y2, double x1, double y1);
+
+  double errorInt;
+  double prevError;
 };
 
 } // namespace JSBSim
