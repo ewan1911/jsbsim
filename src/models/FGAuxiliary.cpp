@@ -136,10 +136,10 @@ bool FGAuxiliary::InitModel(void)
   // 
 
   
-  //loaduwind();
-  //loadvwind();
-  //loadwwind();
-  //loadgrid();
+  loaduwind();
+  loadvwind();
+  loadwwind();
+  loadgrid();
   std::cout << "-----------------------------------------TEST--------------------------------------" <<std::endl;
 
 
@@ -257,10 +257,8 @@ bool FGAuxiliary::Run(bool Holding)
   // FONCTION RAJOUTEES
 
   double dist_long = GetLongitudeRelativePosition() * 0.3048;
-  ajouterDonnees("Zzz_East",dist_long);
 
   double dist_lat = GetLatitudeRelativePosition() * 0.3048;
-  ajouterDonnees("Zzz_North",dist_lat);
 
   double dist_rel = GetDistanceRelativePosition() * 0.3048;
 
@@ -297,10 +295,10 @@ bool FGAuxiliary::Run(bool Holding)
   double East_init = 4000.0; //position de départ dans la boite
   double North_init = 100.0;
 
-  double East_target = 1000.0; //objectif de position a atteindre
-  double North_target = 400.0;
+  double East_target = 5000.0; //objectif de position a atteindre
+  double North_target = 500.0;
 
-  int box = 0; //Si box = 1, on est dans la boite. HEREEEEEEEEEEEEEEEEEEE
+  int box = 1; //Si box = 1, on est dans la boite. HEREEEEEEEEEEEEEEEEEEE
 
   double East_pos;
   double North_pos;
@@ -309,14 +307,16 @@ bool FGAuxiliary::Run(bool Holding)
   {
     East_pos = dist_long + East_init; // on applique l'offset de la boite
     North_pos = dist_lat + North_init;
-    //getRollMoment(alt, dist_lat, dist_long, lon_deg, points, East_init, North_init);
-    //resultMoment();
+    getRollMoment(alt, dist_lat, dist_long, lon_deg, points, East_init, North_init);
   } 
   else
   {
     East_pos = dist_long; 
     North_pos = dist_lat;
   }
+
+  ajouterDonnees("Zzz_North", North_pos);
+  ajouterDonnees("Zzz_East", East_pos);
   
   goTo(East_target, North_target, East_pos, North_pos);
 
@@ -773,7 +773,7 @@ double* FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double lar
 
 
     // Afficher les indices et les distances
-    std::cout << "-----------------------------------------------------------------------------" << std::endl;
+    /* std::cout << "-----------------------------------------------------------------------------" << std::endl;
     std::cout << "POSITION INITIALE : Hauteur = 1000 [m], Longueur = 100 [m], Largeur = 4000 [m]" << std::endl;
     
     std::cout << "------------------HAUTEUR------------------" << std::endl;
@@ -811,7 +811,7 @@ double* FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double lar
         std::cout << "Distance par rapport au noeud " << indice2z << " = " << grid[2][indice2z] - (largeur+ refz) << "[m] "<< std::endl;
     } else {
         std::cout << "La valeur " << largeur + refz << " n'est pas présente dans le tableau." << std::endl;
-    }
+    } */
 
  
      // RATIO 
@@ -1057,17 +1057,6 @@ void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur,
       positions[i][2] = hauteur + D*cos(phi);
     }
   }
-  /* std::cout << "yaw: " << yaw << " pitch: " << pitch << " roll: " << roll << std::endl;
-  std::cout << "Position tip gauche : (" << positions[0][0] << "," << positions[0][1] << "," << positions[0][2] << ")" << std::endl;
-  std::cout << "(" << positions[1][0] << "," << positions[1][1] << "," << positions[1][2] << ")" << std::endl;
-  std::cout << "(" << positions[2][0] << "," << positions[2][1] << "," << positions[2][2] << ")" << std::endl;
-  std::cout << "(" << positions[3][0] << "," << positions[3][1] << "," << positions[3][2] << ")" << std::endl;
-  std::cout << "Position CG : (" << positions[n][0] << "," << positions[n][1] << "," << positions[n][2] << ")" << std::endl;
-  std::cout << "(" << positions[5][0] << "," << positions[5][1] << "," << positions[5][2] << ")" << std::endl;
-  std::cout << "(" << positions[6][0] << "," << positions[6][1] << "," << positions[6][2] << ")" << std::endl;
-  std::cout << "(" << positions[7][0] << "," << positions[7][1] << "," << positions[7][2] << ")" << std::endl;
-  std::cout << "Position tip droit : (" << positions[2*n][0] << "," << positions[2*n][1] << "," << positions[2*n][2] << ")" << std::endl;
-  std::cout << "-----------------------------------------------------------------------------" << std::endl; */
 
   for (int i = 0; i < 2*n+1; i++)
   {
@@ -1129,12 +1118,12 @@ void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur,
   liftForce(2) = 0.0;
   liftForce(3) = totalLift;
 
-  std::cout << "-----------------------------------------------------------------------------" << std::endl;
+  /* std::cout << "-----------------------------------------------------------------------------" << std::endl;
   //std::cout << lift[0] << " " << lift[1] << " " << lift[2] << " " << lift[3] << " " << lift[4] << std::endl;
   std::cout << "yaw = " << yaw << " roll = " << roll << " pitch = " << pitch << std::endl;
-  std::cout << "velCG = " << velCG << " vFlow = " << vFlow << std::endl;
+  std::cout << "velCG = " << velCG << " vFlow = " << vFlow << std::endl; */
   std::cout << "Rolling moment = " << rollMoment << " Nm" << std::endl;
-  std::cout << "-----------------------------------------------------------------------------" << std::endl;
+  std::cout << "-----------------------------------------------------------------------------" << std::endl; 
 }
 
 FGColumnVector3 FGAuxiliary::resultMoment() {
@@ -1231,13 +1220,13 @@ void FGAuxiliary::goTo(double x2, double y2, double x1, double y1) {
 
   double GoTo = P + I + D;
 
-  //////////////// ANTI ROLL
+  //////////////// ROLL LIMITER //////////////////
 
   double phi = FDMExec->GetPropagate()->GetEuler(1); //Roll de l'avion
   double maxPhi = PI/4;
 
-  double gainRollP = -0.0;
-  double gainRollD = -0.0;
+  double gainRollP = -0.025;
+  double gainRollD = -0.1;
 
   double P_Roll = gainRollP*phi;
   double D_Roll;
