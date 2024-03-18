@@ -277,9 +277,6 @@ bool FGAuxiliary::Run(bool Holding)
 
   int vBoite[5][3] = {{0, 0, 3}, {0, 0, 2}, {0, 0, 1}, {0, 0, 0}, {0, 0, 0}};
   
-  double East_init = 4000.0;
-  double North_init = 100.0;
-  
 
   /* rechercheNoeuds(alt, dist_lat, dist_long, 4000.0,100.0, lon_deg);
   //std::cout << "-----------------------------------------------------------------------------------" <<std::endl;
@@ -296,7 +293,32 @@ bool FGAuxiliary::Run(bool Holding)
 
   //getRollMoment(alt, dist_lat, dist_long, lon_deg, points, 4000.0, 100.0);
 
-  goTo(1000.0, 400.0, dist_long, dist_lat);
+
+  double East_init = 4000.0; //position de départ dans la boite
+  double North_init = 100.0;
+
+  double East_target = 1000.0; //objectif de position a atteindre
+  double North_target = 400.0;
+
+  int box = 1; //Si box = 1, on est dans la boite.
+
+  double East_pos;
+  double North_pos;
+
+  if (box == 1) //Dans boite
+  {
+    East_pos = dist_long + East_init; // on applique l'offset de la boite
+    North_pos = dist_lat + North_init;
+    //getRollMoment(alt, dist_lat, dist_long, lon_deg, points, East_init, North_init);
+    //resultMoment();
+  } 
+  else
+  {
+    East_pos = dist_long; 
+    North_pos = dist_lat;
+  }
+  
+  goTo(East_target, North_target, East_pos, North_pos);
 
   // Hello I'm Simon and I'm from Belgium
   return false;
@@ -988,7 +1010,7 @@ FGMatrix33 TransfoNED2B;
 FGColumnVector3 boxMoment;
 FGColumnVector3 liftForce;
 
-void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur, double longi, int n, double ref_larg, double ref_long){
+void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur, double longi, int n, double largeur_0, double longueur_0){
   double width = in.Wingspan*0.3048;
   double dw = width/(2*n);
   double D;
@@ -1049,7 +1071,7 @@ void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur,
 
   for (int i = 0; i < 2*n+1; i++)
   {
-    double* vel = rechercheNoeuds(positions[i][2], positions[i][0], positions[i][1], largeur_init, longueur_init, longi);
+    double* vel = rechercheNoeuds(positions[i][2], positions[i][0], positions[i][1], largeur_0, longueur_0, longi);
     vBoite[i][0] = vel[0];
     vBoite[i][1] = vel[1];
     vBoite[i][2] = vel[2];

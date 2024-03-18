@@ -377,7 +377,7 @@ private:
   void discretisation(double x, double y, double z, int n);
   void dynamics(int vBoite[5][3], int n);
 
-  void getRollMoment(double hauteur, double longueur, double largeur, double longi, int n, double ref_larg, double ref_long);
+  void getRollMoment(double hauteur, double longueur, double largeur, double longi, int n, double largeur_0, double longueur_0);
 
   void initialiserFichier(const std::string& nomFichier);
   void ajouterDonnees(const std::string& nomFichier,double valeur);
