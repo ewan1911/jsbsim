@@ -300,7 +300,7 @@ bool FGAuxiliary::Run(bool Holding)
   double East_target = 1000.0; //objectif de position a atteindre
   double North_target = 400.0;
 
-  int box = 1; //Si box = 1, on est dans la boite.
+  int box = 0; //Si box = 1, on est dans la boite. HEREEEEEEEEEEEEEEEEEEE
 
   double East_pos;
   double North_pos;
@@ -1207,7 +1207,7 @@ void FGAuxiliary::goTo(double x2, double y2, double x1, double y1) {
 
   errorInt += errorPsi;
   
-  double gainP = 0.005;
+  double gainP = 0.025;
   double gainI = 0.0;
   double gainD = 20.0;
 
@@ -1229,31 +1229,31 @@ void FGAuxiliary::goTo(double x2, double y2, double x1, double y1) {
 
   prevError = errorPsi;
 
-  double pGoTo = P + I + D;
+  double GoTo = P + I + D;
 
-  double outputMax = 1.0;
+  //////////////// ANTI ROLL
 
-  if (pGoTo >= 0.0)
+  double phi = FDMExec->GetPropagate()->GetEuler(1); //Roll de l'avion
+  double maxPhi = PI/4;
+
+  double gainRollP = -0.0;
+  double gainRollD = -0.0;
+
+  double P_Roll = gainRollP*phi;
+  double D_Roll;
+
+  if (prevError_Roll == 0)
   {
-    pGoTo = std::min(pGoTo, outputMax);
-  } 
-  else
-  {
-    pGoTo = std::max(pGoTo, -outputMax);
+    D_Roll = 0;
+  } else {
+    D_Roll = gainRollD*phi;
   }
-  
-  
 
-  /* if (psi1 >= psi2)
-  {
-    pGoTo = gainP*errorPsi;
-  } 
-  else 
-  {
-    pGoTo = -gainP*errorPsi;
-  } */
+  prevError_Roll = phi;
+
+  double rollLimiter = P_Roll + D_Roll; 
   
-  double ailerons = pGoTo;
+  double ailerons = GoTo + rollLimiter; //Final command for the ailerons
 
   FDMExec->GetFCS()->SetDaCmd(ailerons);
 

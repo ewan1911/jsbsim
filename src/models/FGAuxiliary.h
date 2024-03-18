@@ -385,6 +385,7 @@ private:
 
   double errorInt;
   double prevError;
+  double prevError_Roll;
 };
 
 } // namespace JSBSim
