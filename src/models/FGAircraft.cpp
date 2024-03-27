@@ -312,38 +312,55 @@ void FGAircraft::virage(double time1, double time2, double angle)
   double integral_roll = 0.0;
   double derivative_roll = 0.0;
   double previous_roll_error = 0.0;
+  double dt = 0.08333;
  
   // Gains PID
-  double roll_p_gain = 0.6;
-  double roll_i_gain = 0.2;
+  double roll_p_gain = 20.0;
+  double roll_i_gain = 0.0;
   double roll_d_gain = 0.0;
  
-  double roll_angle = FDMExec->GetPropagate()->GetEuler(1)* 180/PI;
-  double desired_roll_angle = angle;
- 
+  double roll_angle = FDMExec->GetPropagate()->GetEuler(1);//* 180/PI;
+  //std::cout << "angle_roll  = " << roll_angle<<std::endl;
+  double desired_roll_angle = (angle * PI)  / 180;
+  //std::cout << "angle_voulue  = " << desired_roll_angle<<std::endl;
   roll_error = desired_roll_angle - roll_angle;
+  //std::cout << "erreur  = " << roll_error<<std::endl;
  
   // Terme proportionnel
   double p_term = roll_p_gain * roll_error;
+  //std::cout << "terme_p  = " << p_term<<std::endl;
  
   // Terme intégral
-  integral_roll += roll_error;
+  error.push_back(roll_error);
+  for ( double elem : error) {integral_roll += elem;}
+  integral_roll *= dt;
+  //std::cout << "terme int  = " << integral_roll<<std::endl;
+ 
+ 
  
   // Terme dérivatif
-  derivative_roll = roll_error - previous_roll_error;
+  derivative_roll = (roll_error - previous_roll_error) / dt;
  
   double aileron_command = p_term + (roll_i_gain * integral_roll) + (roll_d_gain * derivative_roll);
-  double trim_command = -p_term;
+ 
+ 
+  if (aileron_command < -1 ){aileron_command = -1;}
+ 
+  if (aileron_command > 1 ){aileron_command = 1;}
+ 
+  //std::cout << "aileron_command  = " << aileron_command<<std::endl;
  
   previous_roll_error = roll_error;
  
   double T  = FDMExec->GetSimTime();
  
-  if (time1 <= T && T< time2)
+  /* if (time1 <= T && T< time2)
   {
     FDMExec->GetFCS()->SetDaCmd(aileron_command);
-    FDMExec->GetFCS()->SetRollTrimCmd(trim_command);
-  }
+    //FDMExec->GetFCS()->SetRollTrimCmd(trim_command);
+  } */
+
+  FDMExec->GetFCS()->SetDaCmd(aileron_command);
 }
 
 } // namespace JSBSim

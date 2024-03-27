@@ -382,10 +382,19 @@ private:
   void initialiserFichier(const std::string& nomFichier);
   void ajouterDonnees(const std::string& nomFichier,double valeur);
   void goTo(double x2, double y2, double x1, double y1);
+  void autopilot(double x_1, double y_1, double x_2, double y_2);
 
   double errorInt;
   double prevError;
   double prevError_Roll;
+  int turn = 0;
+  int direction = 0; //1->right -1->left
+  double altInit = 0.0;
+  double timeInit = 0.0;
+  int trigger = 0; // double car on va soustraire avec time
+  double triggerTime = 0.0;
+  double triggerDirection = 0; //1->right -1->left
+  double rollTest = 0.0;
 };
 
 } // namespace JSBSim

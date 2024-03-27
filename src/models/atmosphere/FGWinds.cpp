@@ -48,6 +48,8 @@ INCLUDES
 #include "math/FGTable.h"
 #include <fstream>
 
+#include "models/FGAircraft.h"
+
 #include "models/FGAuxiliary.h"
 
 using namespace std;
@@ -170,7 +172,7 @@ bool FGWinds::Run(bool Holding)
   if (oneMinusCosineGust.gustProfile.Running) CosineGust();
 
 
-  //FGColumnVector3 addedWind = FDMExec->GetAuxiliary()->getCGWinds();
+
 
 
   // ECEF:  -7559861.763771 , 12098307.815341 , 15298479.890727 (x,y,z, in ft) initial
@@ -189,9 +191,11 @@ bool FGWinds::Run(bool Holding)
   //std::cout << "loc3 =  " << loc3 << std::endl;
 
 
+  FGColumnVector3 addedWind = FDMExec->GetAuxiliary()->getCGWinds()* 3.28084;
 
+  std::cout << addedWind << std::endl;
 
-  vTotalWindNED = vWindNED + vGustNED + vCosineGust + vTurbulenceNED; //+ addedWind;
+  vTotalWindNED = vWindNED + vGustNED + vCosineGust + vTurbulenceNED+ addedWind;
 
    // psiw (Wind heading) is the direction the wind is blowing towards
   if (vWindNED(eX) != 0.0) psiw = atan2( vWindNED(eY), vWindNED(eX) );
