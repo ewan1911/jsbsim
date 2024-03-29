@@ -284,6 +284,9 @@ public:
   FGColumnVector3 resultMoment();
   FGColumnVector3 getCGWinds();
 
+  double newEastTarget;
+  double newNorthTarget;
+
   struct Inputs {
     double Pressure;
     double Density;
@@ -373,16 +376,17 @@ private:
 
   const int n = 10;
 
-  double* rechercheNoeuds(double hauteur, double longueur, double largeur, double refz,double ref_long, double longi);
+  double* rechercheNoeuds(double hauteur, double longueur, double largeur, double refz,double ref_long, double longi, double lat);
   void discretisation(double x, double y, double z, int n);
   void dynamics(int vBoite[5][3], int n);
 
-  void getRollMoment(double hauteur, double longueur, double largeur, double longi, int n, double largeur_0, double longueur_0);
+  void getRollMoment(double hauteur, double longueur, double largeur, double longi, double lat, int n, double largeur_0, double longueur_0);
 
   void initialiserFichier(const std::string& nomFichier);
   void ajouterDonnees(const std::string& nomFichier,double valeur);
   void goTo(double x2, double y2, double x1, double y1);
   void autopilot(double x_1, double y_1, double x_2, double y_2);
+  void goToCenter(double x, double y, double yaw, int direction, int reset);
 
   double errorInt;
   double prevError;
@@ -395,6 +399,13 @@ private:
   double triggerTime = 0.0;
   double triggerDirection = 0; //1->right -1->left
   double rollTest = 0.0;
+
+  int newTarget = 0;
+  //double newCoord[2] = {0.0, 0.0};
+
+  double waitTime = 0.0;
+
+  int ok = 0;
 };
 
 } // namespace JSBSim

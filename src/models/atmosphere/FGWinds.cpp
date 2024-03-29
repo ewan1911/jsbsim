@@ -193,7 +193,7 @@ bool FGWinds::Run(bool Holding)
 
   FGColumnVector3 addedWind = FDMExec->GetAuxiliary()->getCGWinds()* 3.28084;
 
-  std::cout << addedWind << std::endl;
+  //std::cout << addedWind << std::endl;
 
   vTotalWindNED = vWindNED + vGustNED + vCosineGust + vTurbulenceNED+ addedWind;
 

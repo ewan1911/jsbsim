@@ -361,6 +361,7 @@ void FGAircraft::virage(double time1, double time2, double angle)
   } */
 
   FDMExec->GetFCS()->SetDaCmd(aileron_command);
+  FDMExec->GetFCS()->SetDeCmd(-0.25);
 }
 
 } // namespace JSBSim
