@@ -1467,7 +1467,7 @@ void FGAuxiliary::autopilot(double x_2, double y_2, double x_1, double y_1){
   } */
 }
 
-void FGAuxiliary::goToCenter(double x, double y, double yaw, int direction, int reset){
+void FGAuxiliary::goToCenter(double x, double y, double yaw, int direction, int reset){ //on utilisera plus
   if (yaw >= 0.0 && yaw < PI/2 && reset == 0)
   {
     if (direction == 1)
