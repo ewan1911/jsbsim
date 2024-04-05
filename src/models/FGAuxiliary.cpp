@@ -293,11 +293,11 @@ bool FGAuxiliary::Run(bool Holding)
   //getRollMoment(alt, dist_lat, dist_long, lon_deg, points, 4000.0, 100.0);
 
 
-  double East_init = 5000.0; //position de départ dans la boite
+  double East_init = 4000.0; //position de départ dans la boite
   double North_init = 3000.0;
 
-  double East_target = 7000.0; //objectif de position a atteindre
-  double North_target = 6000.0;
+  double East_target = 2000.0; //objectif de position a atteindre
+  double North_target = 5000.0;
 
   int box = 1; //Si box = 1, on est dans la boite. HEREEEEEEEEEEEEEEEEEEE
 
@@ -330,9 +330,35 @@ bool FGAuxiliary::Run(bool Holding)
   ajouterDonnees("Zzz_East", East_pos);
   
   //goTo(East_target, North_target, East_pos, North_pos);
-  autopilot(East_target, North_target, East_pos, North_pos);
+  //FDMExec->GetFCS()->SetDeCmd(-0.15);
+  //autopilot(East_target, North_target, East_pos, North_pos);
+
+  
 
   // Hello I'm Simon and I'm from Belgium
+  FGColumnVector3 boxWind = getCGWinds();
+  double updraft = boxWind(3) * -1 * 3.28084; // - car en NED le updraft est négatif. Je le remets positif pour plus de clareté et ne pas se tromper.
+
+  double yaw = FDMExec->GetPropagate()->GetEuler(3);
+  double time = FDMExec->GetSimTime();
+
+  autopilot2(updraft, time, East_pos, North_pos, East_target, North_target);
+  
+  /* if (time >= 20) {
+    turning(20.0);
+  } else {
+    goTo(4000.0 , 5000.0, East_pos, North_pos);
+  } */
+
+  std::cout << time << std::endl;
+
+  double a_R = FDMExec->GetFCS()->GetDaCmd();
+  double rolleee = FDMExec->GetPropagate()->GetEuler(1);
+  ajouterDonnees("Zzz_aR", a_R);
+  ajouterDonnees("Zzz_Time", time);
+  ajouterDonnees("Zzz_Roll", rolleee);
+
+
   return false;
 }
 
@@ -1270,13 +1296,6 @@ void FGAuxiliary::goTo(double x2, double y2, double x1, double y1) {
   }
   
 
-  double a_R = FDMExec->GetFCS()->GetDaRPos();
-  double T = FDMExec->GetSimTime();
-  double rolleee = FDMExec->GetPropagate()->GetEuler(1);
-  ajouterDonnees("Zzz_aR", a_R);
-  ajouterDonnees("Zzz_Time", T);
-  ajouterDonnees("Zzz_Roll", rolleee);
-
   
   //std::cout << "-----------------------------------------------------------------------------" << std::endl;
   //std::cout << x1 << " " << psi1 << " " << psi2 << " " << " delta Yaw = " << errorPsi << " " << ailerons << std::endl;
@@ -1330,20 +1349,24 @@ void FGAuxiliary::autopilot(double x_2, double y_2, double x_1, double y_1){
   double deltaTime = 4.0;
   double turn_angle = 6.0; //degres de roll
 
+  double yaw = FDMExec->GetPropagate()->GetEuler(3);
+
   FGColumnVector3 boxWind = getCGWinds();
   double updraft = boxWind(3) * -1; // - car en NED le updraft est négatif. Je le remets positif pour plus de clareté et ne pas se tromper.
 
-  std::cout << time << std::endl;
+  //std::cout << time << std::endl;
   
   if (turn == 1) //si le virage est en cours
   {
     if (direction == 1)
     {
       FDMExec->GetAircraft()->virage(50.0, 150.0, turn_angle);
+      sideslipController(x_1, y_1);
       direction = 1;
       turn = 1;
     } else if (direction == -1) {
       FDMExec->GetAircraft()->virage(50.0, 150.0, -turn_angle);
+      sideslipController(x_1, y_1);
       direction = -1;
       turn = 1;
     }
@@ -1353,10 +1376,11 @@ void FGAuxiliary::autopilot(double x_2, double y_2, double x_1, double y_1){
       turn = 0; //on indique que le virage est désamorcé
       direction = 0;
       waitTime = time;
-      std::cout << "OUT OF TURN" << std::endl;
+      //std::cout << "OUT OF TURN" << std::endl;
     }
   }
   else { // turn == 0
+    //std::cout << "Autopilot" << std::endl;
     if (time - waitTime < 200.0 && time >= 200.0)
     {
       //std::cout << time - waitTime << " " << x_1 << " " << y_1 << std::endl;
@@ -1375,7 +1399,7 @@ void FGAuxiliary::autopilot(double x_2, double y_2, double x_1, double y_1){
       } 
       else if ((abs(rollInst) > rollLimit || updraft > 0.5) && trigger == 1 && (time - triggerTime) < deltaTime && ok == 0){
         trigger = 1;
-        std::cout << time - triggerTime << std::endl;
+        //std::cout << time - triggerTime << std::endl;
         rollTest += rollInst; //permet de confirmer que le roll va dans un sens ou l'autre et pas juste en un point qui peut fausser le jugement.
         goTo(x_2, y_2, x_1, y_1);
       } 
@@ -1388,7 +1412,7 @@ void FGAuxiliary::autopilot(double x_2, double y_2, double x_1, double y_1){
           {
             direction = 1;
             double yawInst = FDMExec->GetPropagate()->GetEuler(3);
-            std::cout << x_1 << " " << y_1 << std::endl;
+            //std::cout << x_1 << " " << y_1 << std::endl;
             goToCenter(x_1, y_1, yawInst, direction, 0);
             goTo(newEastTarget, newNorthTarget, x_1, y_1);
             newTarget = 1;
@@ -1411,7 +1435,7 @@ void FGAuxiliary::autopilot(double x_2, double y_2, double x_1, double y_1){
             altInit = Propagate->GetAltitudeASL()*0.3048; //on set la hauteur initale du virage
             timeInit = time; //on set le time inital du virage. On jouera avec un des deux dans futures conditions.
             newTarget = 0;
-            std::cout << "IN RIGHT TURN AT " << x_1 << " " << y_1 << std::endl;
+            std::cout << "IN RIGHT TURN AT " << x_1 << " " << y_1 << " time: " << time << std::endl;
             goToCenter(x_1, y_1, 0.0, direction, 1);
             ok = 0;
           }
@@ -1422,7 +1446,7 @@ void FGAuxiliary::autopilot(double x_2, double y_2, double x_1, double y_1){
           {
             direction = -1;
             double yawInst = FDMExec->GetPropagate()->GetEuler(3);
-            std::cout << x_1 << " " << y_1 << std::endl;
+            //std::cout << x_1 << " " << y_1 << std::endl;
             goToCenter(x_1, y_1, yawInst, direction, 0);
             goTo(newEastTarget, newNorthTarget, x_1, y_1);
             newTarget = 1;
@@ -1445,7 +1469,7 @@ void FGAuxiliary::autopilot(double x_2, double y_2, double x_1, double y_1){
             altInit = Propagate->GetAltitudeASL()*0.3048; //on set la hauteur initale du virage
             timeInit = time; //on set le time inital du virage. On jouera avec un des deux dans futures conditions.
             newTarget = 0;
-            std::cout << "IN LEFT TURN AT " << x_1 << " " << y_1 << std::endl;
+            std::cout << "IN LEFT TURN AT " << x_1 << " " << y_1 << " time: " << time << std::endl;
             goToCenter(x_1, y_1, 0.0, direction, 1);
             ok = 0;
           }
@@ -1516,6 +1540,213 @@ void FGAuxiliary::goToCenter(double x, double y, double yaw, int direction, int 
   std::cout << newEastTarget << " " << newNorthTarget << std::endl;
   //newCoord = {newEastTarget, newNorthTarget};
   //return newTarget;
+}
+
+void FGAuxiliary::sideslipController(double x, double y){
+  double direction;
+  double t = FDMExec->GetSimTime();
+
+  double yaw = FDMExec->GetPropagate()->GetEuler(3);
+
+  if (y >= oldNorth) {
+    if (x >= oldEast) { //premier quadrant
+      direction = atan2(x-oldEast, y-oldNorth);
+    } else { //deuxieme quadrant
+      direction = 2*PI - atan2(oldEast-x, y-oldNorth);
+    }
+  } else {
+    if (x >= oldEast) { //quatrieme quadrant
+      direction = PI - atan2(x-oldEast, oldNorth-y);
+    } else { //troiseme quadrant
+      direction = PI + atan2(oldEast-x, oldNorth-y);
+    }
+  }
+  oldEast  = x;
+  oldNorth = y;
+
+  double sideslip = yaw - direction;
+
+  if (sideslip >= 1.0) {
+    sideslip = 0.0;
+  }
+
+  double gainPss = 0.015;
+  double gainIss = 0.0;
+  double gainDss = 100.0;
+
+  
+  double Psideslip = gainPss * sideslip;
+  double Isideslip = 0.0;
+
+  double Dsideslip;
+  if (t <= 0.08333) {
+    Dsideslip = 0.0;
+  } else {
+    Dsideslip = gainDss * (sideslip-oldSideslip);
+  }
+
+  oldSideslip = sideslip;
+
+  double cmdRudder = Psideslip + Isideslip + Dsideslip;
+
+  FDMExec->GetFCS()->SetDrCmd(cmdRudder);
+
+
+  ajouterDonnees("Zzz_yaw", yaw);
+  ajouterDonnees("Zzz_direction", direction);
+  ajouterDonnees("Zzz_t", t);
+  ajouterDonnees("Zzz_rudder", cmdRudder);
+}
+
+void FGAuxiliary::autopilot2(double updraft, double time, double x, double y, double x_t, double y_t){
+  double deltaTime = 5.0;
+  double rollInst = boxMoment(1);
+  if (turn == 1) { //in pump
+    inThermal(updraft, time, x, y, x_t, y_t);;
+  } else { //not in pump
+    if (updraft >= 0.5 && trigger == 0) {
+      trigger = 1;
+      triggerTime = time;
+      goTo(x_t, y_t, x, y); //on continue vers la target
+    } else if (updraft >= 0.5 && trigger == 1 && (time - triggerTime) < deltaTime) {
+      trigger = 1;
+      rollTest += rollInst; //permet de confirmer que le roll va dans un sens ou l'autre et pas juste en un point qui peut fausser le jugement.
+      goTo(x_t, y_t, x, y);
+    } else if (updraft >= 0.5 && trigger == 1 && (time - triggerTime) >= deltaTime) { // ON EST DANS LE THERMAL
+      inThermal(updraft, time, x, y, x_t, y_t);
+      turn = 1; //temps que la nouvelle fonction n'a pas fini, on met turn = 1 pour pas repasser par toutes les conditions
+      altInit = Propagate->GetAltitudeASL()*0.3048;
+      timeInit = time; //Ne pas oublier de remettre a zéro qd NEWFCT a fini!
+      trigger = 0;
+      std::cout << "<<<<<<<<< START TURNING >>>>>>>>>" << x << " " << y << " " << rollTest << std::endl;
+    } else {
+      trigger = 0; //aucune pompe valable de détectée
+      goTo(x_t, y_t, x, y); //on continue vers la target
+    }
+  }
+  sideslipController(x, y); //Tjrs avoir la yaw string droite!
+}
+
+void FGAuxiliary::inThermal(double updraft, double time, double x, double y, double x_t, double y_t){ //Va gérer tout ce qui se passe une fois dans une pompe valable. 
+  if (updraft >= 1.5 || ok == 1)
+  {
+    ok = 1; // on a lancé la procédure de centrage. on force la fonction a bien s'exécuter avec variable ok.
+    thermalCentering(updraft, time, x, y, x_t, y_t);
+    std::cout << "<<<<<<<<< ASSEZ DE UPDRAFT >>>>>>>>>" << x << " " << y << " " << std::endl;
+  } 
+  else if (updraft < 0.45) 
+  {
+    turn = 0; //on annule la recherche de pompe on contiune.
+    ok = 0;
+    goTo(x_t, y_t, x, y);
+    std::cout << "<<<<<<<<< PAS ASSEZ DE UPDRAFT >>>>>>>>>" << x << " " << y << " " << std::endl;
+  } 
+  else {
+    goTo(x_t, y_t, x, y);
+  }
+}
+
+void FGAuxiliary::thermalCentering(double updraft, double time, double x, double y, double x_t, double y_t){
+  double deltaUpdraft = (updraft - prevUpdraft);
+
+  double altInst = Propagate->GetAltitudeASL()*0.3048;
+
+  if (rollTest >= 0) {
+    direction = -1;
+  } else {
+    direction = 1;
+  }
+
+  if (deltaUpdraft <= -0.03 && triggerDown == 0) 
+  {
+    timeDown = time;
+    triggerDown = 1;
+    timeUp = 0.0;
+    triggerUp = 0;
+    turning(direction * 20.0);
+    std::cout << "<<<<<<<<< TRIGGER DOWN >>>>>>>>> " << deltaUpdraft << " triggerDown = " << triggerDown << std::endl;
+  } else if (deltaUpdraft <= -0.02 && triggerDown == 1 && (time - timeDown) < 3.0)
+  {
+    turning(direction * 20.0);
+    std::cout << "<<<<<<<<< TRIGGER DOWN 1>>>>>>>>> " << "updraft = " <<updraft<< " prev = " << prevUpdraft << std::endl;
+  }
+  else if (deltaUpdraft <= -0.02 && triggerDown == 1 && (time - timeDown) >= 3.0) 
+  {
+    turning(direction * 35.0); //steep turn 
+    std::cout << "<<<<<<<<< TURN 35deg >>>>>>>>>" << std::endl;
+  } 
+  else if (deltaUpdraft > 0.03 && triggerUp == 0)
+  {
+    timeDown = 0.0;
+    triggerDown = 0;
+    timeUp = time;
+    triggerUp = 1;
+    turning(direction * 20.0);
+    std::cout << "<<<<<<<<< TRIGGER UP >>>>>>>>> " << deltaUpdraft << std::endl;
+  } 
+  else if (deltaUpdraft > 0.02 && triggerUp == 1 && (time - timeUp) < 6.0) {
+    turning(direction * 25.0);
+    std::cout << "<<<<<<<<< TRIGGER Up 1>>>>>>>>> " << deltaUpdraft << std::endl;
+  }
+  else if (deltaUpdraft > 0.02 && triggerUp == 1 && (time - timeUp) >= 6.0) 
+  {
+    turning(direction * 10.0); 
+    std::cout << "<<<<<<<<< TURN 10deg >>>>>>>>>" << std::endl;
+  } else {
+    turning(direction * 20.0);
+    triggerDown = 0;
+    triggerUp = 0;
+    timeDown = 0.0;
+    timeUp = 0.0;
+    std::cout << "<<<<<<<<< TURN 20deg >>>>>>>>>" << std::endl; //on confirme qu'il faut 25 deg
+  }
+
+  if ((altInst - altInit) >= 200.0) { //si on a monté assez on sort de la pompe et on continue vers la target
+    turn = 0;
+    ok = 0;
+    goTo(x_t, y_t, x, y);
+  }
+
+  prevUpdraft = updraft;
+}
+
+void FGAuxiliary::turning(double angle)
+{
+  // Variables de PID
+  double roll_error = 0.0;
+ 
+  // Gains PID
+  double roll_p_gain = 1.0;
+  double roll_d_gain = 30.0;
+  double roll_i_gain = 0.03;
+ 
+  double roll_angle = FDMExec->GetPropagate()->GetEuler(1);//* 180/PI;
+  double desired_roll_angle = (angle * PI) / 180;
+  roll_error = desired_roll_angle - roll_angle;
+ 
+  // Terme proportionnel
+  double p_term = roll_p_gain * roll_error;
+
+  double d_term;
+  if (oldRollTurn == 0.0) {
+    d_term = 0.0;
+  } else {
+    d_term = roll_d_gain * (roll_error - oldRollTurn);
+  }
+  oldRollTurn = roll_error;
+
+  double i_term;
+  integralRoll += roll_error;
+  i_term = roll_i_gain * integralRoll;
+
+  double aileron_command = p_term + d_term + i_term;
+ 
+  if (aileron_command < -1 ){aileron_command = -1;}
+ 
+  if (aileron_command > 1 ){aileron_command = 1;}
+
+  FDMExec->GetFCS()->SetDaCmd(aileron_command);
+  FDMExec->GetFCS()->SetDeCmd(-0.25);
 }
 
 } // namespace JSBSim

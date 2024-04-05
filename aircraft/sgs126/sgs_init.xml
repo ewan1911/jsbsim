@@ -10,6 +10,6 @@
   <latitude unit="DEG">   0.0 </latitude>
   <longitude unit="DEG"> 0.0 </longitude>
   <phi unit="DEG">         0.0 </phi> <!--Yaw angle-->
-  <psi unit="DEG">       -30.0 </psi> <!--Roll angle-->
+  <psi unit="DEG">       -50.0 </psi> <!--Roll angle-->
   <beta unit="DEG">        0.0 </beta>
 </initialize>

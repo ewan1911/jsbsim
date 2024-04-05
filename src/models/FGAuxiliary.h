@@ -388,6 +388,26 @@ private:
   void autopilot(double x_1, double y_1, double x_2, double y_2);
   void goToCenter(double x, double y, double yaw, int direction, int reset);
 
+  void sideslipController(double x, double y);
+
+
+  //AUTOPILOT 2
+  void autopilot2(double updraft, double time, double x, double y, double x_t, double y_t); //x_t and y_t target position
+  void inThermal(double updraft, double time, double x, double y, double x_t, double y_t);
+  void thermalCentering(double updraft, double time, double x, double y, double x_t, double y_t);
+  void turning(double angle);
+
+  double prevUpdraft;
+
+  double timeUp;
+  double timeDown;
+  int triggerDown;
+  int triggerUp;
+
+  double oldRollTurn = 0.0;
+  double integralRoll = 0.0;
+  ///////////////
+
   double errorInt;
   double prevError;
   double prevError_Roll;
@@ -406,6 +426,11 @@ private:
   double waitTime = 0.0;
 
   int ok = 0;
+
+  //sideslip controller
+  double oldEast = 0.0;
+  double oldNorth = 0.0;
+  double oldSideslip = 0.0;
 };
 
 } // namespace JSBSim
