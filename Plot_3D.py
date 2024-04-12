@@ -23,6 +23,9 @@ data_dir = np.loadtxt('/Users/Simon/Documents/Aaa_Thesis/git_jsbsim/jsbsim/Zzz_d
 data_tori = np.loadtxt('/Users/Simon/Documents/Aaa_Thesis/git_jsbsim/jsbsim/Zzz_t.txt')
 data_rudder = np.loadtxt('/Users/Simon/Documents/Aaa_Thesis/git_jsbsim/jsbsim/Zzz_rudder.txt') """
 
+data_rError = np.loadtxt('/Users/Simon/Documents/Aaa_Thesis/git_jsbsim/jsbsim/Zzz_rollError.txt')
+data_timeTurn = np.loadtxt('/Users/Simon/Documents/Aaa_Thesis/git_jsbsim/jsbsim/Zzz_timeTurn.txt')
+
 ax = plt.axes(projection='3d')
 
 
@@ -74,8 +77,9 @@ plt.show()
 
 plt.figure("aileron R position overtime")
 
-#plt.plot(data_T, data_aR)
-plt.plot(data_T, data_roll * 180/3.14159)
+plt.plot(data_T, data_aR)
+#plt.plot(data_T, data_roll)
+plt.plot(data_timeTurn, data_rError)
 
 #plt.plot(data_tori, data_yaw, c='red', label='yaw')
 #plt.plot(data_tori, data_yaw-data_dir, c='blue', label='ori-yaw')

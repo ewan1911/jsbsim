@@ -406,6 +406,15 @@ private:
 
   double oldRollTurn = 0.0;
   double integralRoll = 0.0;
+
+  int exit;
+  double exitTime;
+
+  double alt;
+
+  int triggerRoll;
+  double timeTriggerRoll;
+  int closer;
   ///////////////
 
   double errorInt;

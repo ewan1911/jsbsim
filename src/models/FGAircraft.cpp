@@ -127,6 +127,8 @@ bool FGAircraft::Run(bool Holding)
   FGColumnVector3 addedMoment = FDMExec->GetAuxiliary()->resultMoment(); //fontionne avec l'erreur
   vMoments += addedMoment;
 
+  //std::cout << "Moments = " << addedMoment << std::endl;
+
   /* double roll_error = 0.0;
   double integral_roll = 0.0;
   double derivative_roll = 0.0;

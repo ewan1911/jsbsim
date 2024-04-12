@@ -141,8 +141,10 @@ bool FGAuxiliary::InitModel(void)
   loadvwind();
   loadwwind();
   loadgrid();
-  std::cout << "-----------------------------------------TEST--------------------------------------" <<std::endl;
 
+  std::cout << u[110][110][110] << std::endl;
+  std::cout << v[110][110][110] << std::endl;
+  std::cout << w[110][110][110] << std::endl;
 
   return true;
 }
@@ -263,7 +265,7 @@ bool FGAuxiliary::Run(bool Holding)
 
   double dist_rel = GetDistanceRelativePosition() * 0.3048;
 
-  double alt = Propagate->GetAltitudeASL()*0.3048;
+  alt = Propagate->GetAltitudeASL()*0.3048;
   ajouterDonnees("Zzz_Alt",alt);
 
   double lon_deg = Propagate->GetLongitudeDeg();
@@ -272,7 +274,7 @@ bool FGAuxiliary::Run(bool Holding)
 
   double gride = grid[0][0];
 
-  points = 40; //nombre de points de part et d'autre du centre. Ici arbitraire.
+  points = 20; //nombre de points de part et d'autre du centre. Ici arbitraire.
 
   int vBoite[5][3] = {{0, 0, 3}, {0, 0, 2}, {0, 0, 1}, {0, 0, 0}, {0, 0, 0}};
   
@@ -293,11 +295,11 @@ bool FGAuxiliary::Run(bool Holding)
   //getRollMoment(alt, dist_lat, dist_long, lon_deg, points, 4000.0, 100.0);
 
 
-  double East_init = 4000.0; //position de départ dans la boite
-  double North_init = 3000.0;
+  double East_init = 1000.0; //position de départ dans la boite
+  double North_init = 7000.0;
 
-  double East_target = 2000.0; //objectif de position a atteindre
-  double North_target = 5000.0;
+  double East_target = 7000.0; //objectif de position a atteindre
+  double North_target = 4000.0;
 
   int box = 1; //Si box = 1, on est dans la boite. HEREEEEEEEEEEEEEEEEEEE
 
@@ -318,11 +320,11 @@ bool FGAuxiliary::Run(bool Holding)
   {
     East_pos = dist_long + East_init; // on applique l'offset de la boite
     North_pos = dist_lat + North_init;
-    getRollMoment(alt, dist_lat, dist_long, lon_deg, lat_deg, points, East_init, North_init);
+    getRollMoment(alt, North_pos, East_pos, North_init, East_init, points, East_init, North_init);
   } 
   else
   {
-    East_pos = dist_long; 
+    East_pos = dist_long;
     North_pos = dist_lat;
   }
 
@@ -333,11 +335,12 @@ bool FGAuxiliary::Run(bool Holding)
   //FDMExec->GetFCS()->SetDeCmd(-0.15);
   //autopilot(East_target, North_target, East_pos, North_pos);
 
-  
+  //double* velo = rechercheNoeuds(alt, North_pos, East_pos, East_init, North_init, 0.0, 0.0);
 
   // Hello I'm Simon and I'm from Belgium
   FGColumnVector3 boxWind = getCGWinds();
-  double updraft = boxWind(3) * -1 * 3.28084; // - car en NED le updraft est négatif. Je le remets positif pour plus de clareté et ne pas se tromper.
+  double updraft = boxWind(3) * -1; // - car en NED le updraft est négatif. Je le remets positif pour plus de clareté et ne pas se tromper.
+  //std::cout << "updraft = " << updraft << " " << East_pos << " " << North_pos << std::endl;
 
   double yaw = FDMExec->GetPropagate()->GetEuler(3);
   double time = FDMExec->GetSimTime();
@@ -350,7 +353,7 @@ bool FGAuxiliary::Run(bool Holding)
     goTo(4000.0 , 5000.0, East_pos, North_pos);
   } */
 
-  std::cout << time << std::endl;
+  //std::cout << time << "x_pos = " << East_pos << " y_pos = " << North_pos << std::endl;
 
   double a_R = FDMExec->GetFCS()->GetDaCmd();
   double rolleee = FDMExec->GetPropagate()->GetEuler(1);
@@ -646,7 +649,7 @@ void FGAuxiliary::loaduwind()
   const int dim3 = 257;  
 
   //std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/u_aplati.csv");
-  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/jsbsim-code/src/models/atmosphere/u_aplati_1.csv");
+  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/CBL_large/u_aplati.csv");
 
   if (in.is_open()) {
       std::cout << "File u opened successfully." << std::endl;
@@ -673,9 +676,7 @@ void FGAuxiliary::loadvwind()
   const int dim3 = 257;  
 
   //std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/v_aplati.csv");
-  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/jsbsim-code/src/models/atmosphere/v_aplati_1.csv");
-
-  std::cout << "TEST" << std::endl;
+  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/CBL_large/v_aplati.csv");
 
   if (in.is_open()) {
       std::cout << "File v opened successfully." << std::endl;
@@ -702,7 +703,7 @@ void FGAuxiliary::loadwwind()
   const int dim3 = 257;  
 
   //std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/w_aplati.csv");
-  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/jsbsim-code/src/models/atmosphere/w_aplati_1.csv");
+  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/CBL_large/w_aplati.csv");
 
   if (in.is_open()) {
       std::cout << "File w opened successfully." << std::endl;
@@ -725,7 +726,7 @@ void FGAuxiliary::loadwwind()
 void FGAuxiliary::loadgrid()
 {
   //std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/grid.csv");
-  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/jsbsim-code/src/models/atmosphere/grid.csv");
+  std::ifstream in("/Users/Simon/Documents/Aaa_Thesis/git_jsbsim/jsbsim/grid.csv");
 
   if (in.is_open()) {
       std::cout << "File grid opened successfully." << std::endl;
@@ -789,7 +790,7 @@ double* FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double lar
     // Parcourir le tableau longueur 
     int indice1y = -1, indice2y = -1;
     for (int i = 0; i < 256 - 1; ++i) {
-        if (grid[1][i] <= (longueur + ref_long) && (longueur + ref_long) <= grid[1][i + 1]) {
+        if (grid[1][i] <= (longueur) && (longueur) <= grid[1][i + 1]) {
             indice1y = i;
             indice2y = i + 1;
             break;
@@ -806,14 +807,14 @@ double* FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double lar
     // Parcourir le tableau largeur  
     int indice1z = -1, indice2z = -1;
     for (int i = 0; i < 256 - 1; ++i) {
-        if (grid[2][i] <= largeur + refz  && largeur + refz <= grid[2][i + 1]) {
+        if (grid[2][i] <= largeur  && largeur <= grid[2][i + 1]) {
             indice1z = i;
             indice2z = i + 1;
             break;
         }
     }
 
-
+    //std::cout << indice1h << " " << indice2h << " " << indice1y << " " << indice2y << " " << indice1z << " " << indice2z << std::endl;
 
     // Afficher les indices et les distances
     /* std::cout << "-----------------------------------------------------------------------------" << std::endl;
@@ -862,17 +863,18 @@ double* FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double lar
     double delta_h_1_0 = grid[0][indice2h] - grid[0][indice1h];
     double ratio_h = delta_h / delta_h_1_0;
 
-    double delta_long = (longueur + ref_long) - grid[1][indice1y];
+    double delta_long = (longueur) - grid[1][indice1y];
     double delta_long_1_0 = grid[1][indice2y] - grid[1][indice1y];
     double ratio_long = delta_long / delta_long_1_0;
 
 
-    double delta_larg =  (largeur + refz) - grid[2][indice1z];
+    double delta_larg =  (largeur) - grid[2][indice1z];
     double delta_larg_1_0 = grid[2][indice2z] - grid[2][indice1z];
     double ratio_larg = delta_larg / delta_larg_1_0;
 
     //########################################################### u ########################################################################
     double uc000 = u[indice1h][indice1y][indice1z];
+    //std::cout << uc000 << std::endl;
     double uc100 = u[indice1h][indice1y][indice2z];
     double uc101 = u[indice2h][indice1y][indice2z];
     double uc001 = u[indice2h][indice1y][indice1z];
@@ -925,7 +927,7 @@ double* FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double lar
     double wc011 = w[indice2h][indice2y][indice1z];
     double wc111 = w[indice2h][indice2y][indice2z];
     double wc110 = w[indice1h][indice2y][indice2z];
-    double wc010 = w[indice1h][indice2y][indice1z]; 
+    double wc010 = w[indice1h][indice2y][indice1z];
 
     // ALONG Xw 
     double wc00 = wc000 * (1-ratio_larg) + wc100 * ratio_larg;
@@ -945,6 +947,12 @@ double* FGAuxiliary::rechercheNoeuds(double hauteur, double longueur, double lar
     std::cout << "-----------------------------------------------------------" << std::endl; */
 
     double velocities[3] = {uc, vc, wc};
+    //std::cout << uc << vc << wc << std::endl;
+
+    //std::cout << w[112][169][128] << std::endl;
+    /* std::cout << u[110][110][110] << std::endl;
+    std::cout << v[110][110][110] << std::endl;
+    std::cout << w[110][110][110] << std::endl; */
 
     return velocities;
 }
@@ -1107,6 +1115,7 @@ void FGAuxiliary::getRollMoment(double hauteur, double longueur, double largeur,
     vBoite[i][0] = vel[0];
     vBoite[i][1] = vel[1];
     vBoite[i][2] = vel[2];
+    //std::cout << "vBoite = " << vBoite[i][0] << " " << vBoite[i][1] << " " << vBoite[i][2] << std::endl;
   }
 
   for (int i = 0; i < 2*n+1; i++)
@@ -1268,7 +1277,7 @@ void FGAuxiliary::goTo(double x2, double y2, double x1, double y1) {
   double maxPhi = PI/4;
 
   double gainRollP = -0.025;
-  double gainRollD = -5.0;
+  double gainRollD = -10.0;
 
   double P_Roll = gainRollP*phi;
   double D_Roll;
@@ -1602,22 +1611,42 @@ void FGAuxiliary::autopilot2(double updraft, double time, double x, double y, do
   double deltaTime = 5.0;
   double rollInst = boxMoment(1);
   if (turn == 1) { //in pump
-    inThermal(updraft, time, x, y, x_t, y_t);;
-  } else { //not in pump
+    inThermal(updraft, time, x, y, x_t, y_t);
+  } 
+  else if (time >= 60.0 && time - exitTime <= 30.0 && turn == 0) { //on force l'éloignement de la plume pour avancer vers target.
+    goTo(x_t, y_t, x, y);
+  }
+  else { //not in pump
+    /* if (abs(rollInst) >= 100.0 && triggerRoll == 0 && alt <= 1200.0)
+    {
+      triggerRoll = 1;
+      timeTriggerRoll = time;
+    } else if ((abs(rollInst) >= 100.0 && triggerRoll == 1 && (time - timeTriggerRoll) >= 5.0) || closer == 1) {
+      if (rollInst < 0.0){
+        turning(20.0);
+      } else {
+        turning(-20.0);
+      }
+      closer = 1;
+      std::cout << "SE RAPPROCHE DU THERMAL " << rollInst << " " << x << " " << y << std::endl;
+    } */
+    
     if (updraft >= 0.5 && trigger == 0) {
+      closer = 0;
       trigger = 1;
       triggerTime = time;
       goTo(x_t, y_t, x, y); //on continue vers la target
     } else if (updraft >= 0.5 && trigger == 1 && (time - triggerTime) < deltaTime) {
       trigger = 1;
-      rollTest += rollInst; //permet de confirmer que le roll va dans un sens ou l'autre et pas juste en un point qui peut fausser le jugement.
+      //rollTest += rollInst; //permet de confirmer que le roll va dans un sens ou l'autre et pas juste en un point qui peut fausser le jugement.
       goTo(x_t, y_t, x, y);
     } else if (updraft >= 0.5 && trigger == 1 && (time - triggerTime) >= deltaTime) { // ON EST DANS LE THERMAL
-      inThermal(updraft, time, x, y, x_t, y_t);
       turn = 1; //temps que la nouvelle fonction n'a pas fini, on met turn = 1 pour pas repasser par toutes les conditions
       altInit = Propagate->GetAltitudeASL()*0.3048;
       timeInit = time; //Ne pas oublier de remettre a zéro qd NEWFCT a fini!
       trigger = 0;
+      rollTest = rollInst;
+      inThermal(updraft, time, x, y, x_t, y_t);
       std::cout << "<<<<<<<<< START TURNING >>>>>>>>>" << x << " " << y << " " << rollTest << std::endl;
     } else {
       trigger = 0; //aucune pompe valable de détectée
@@ -1628,26 +1657,32 @@ void FGAuxiliary::autopilot2(double updraft, double time, double x, double y, do
 }
 
 void FGAuxiliary::inThermal(double updraft, double time, double x, double y, double x_t, double y_t){ //Va gérer tout ce qui se passe une fois dans une pompe valable. 
-  if (updraft >= 1.5 || ok == 1)
+  double rollInst = boxMoment(1);
+  if ((updraft >= 1.2 || ok == 1 || abs(rollInst) >= 200.0) && altInit <= 5000.0)
   {
     ok = 1; // on a lancé la procédure de centrage. on force la fonction a bien s'exécuter avec variable ok.
     thermalCentering(updraft, time, x, y, x_t, y_t);
-    std::cout << "<<<<<<<<< ASSEZ DE UPDRAFT >>>>>>>>>" << x << " " << y << " " << std::endl;
+    //std::cout << "<<<<<<<<< ASSEZ DE UPDRAFT >>>>>>>>>" << x << " " << y << " " << std::endl;
   } 
-  else if (updraft < 0.45) 
+  else if (updraft < 0.0) 
   {
     turn = 0; //on annule la recherche de pompe on contiune.
     ok = 0;
+    altInit = 0.0;
+    timeInit = 0.0;
+    rollTest = 0.0;
     goTo(x_t, y_t, x, y);
     std::cout << "<<<<<<<<< PAS ASSEZ DE UPDRAFT >>>>>>>>>" << x << " " << y << " " << std::endl;
-  } 
+  }
   else {
     goTo(x_t, y_t, x, y);
   }
 }
 
 void FGAuxiliary::thermalCentering(double updraft, double time, double x, double y, double x_t, double y_t){
+  double rollInst = boxMoment(1);
   double deltaUpdraft = (updraft - prevUpdraft);
+  double deltaTime = 1.0;
 
   double altInst = Propagate->GetAltitudeASL()*0.3048;
 
@@ -1657,7 +1692,7 @@ void FGAuxiliary::thermalCentering(double updraft, double time, double x, double
     direction = 1;
   }
 
-  if (deltaUpdraft <= -0.03 && triggerDown == 0) 
+  if (deltaUpdraft <= -0.01 && triggerDown == 0) 
   {
     timeDown = time;
     triggerDown = 1;
@@ -1665,17 +1700,17 @@ void FGAuxiliary::thermalCentering(double updraft, double time, double x, double
     triggerUp = 0;
     turning(direction * 20.0);
     std::cout << "<<<<<<<<< TRIGGER DOWN >>>>>>>>> " << deltaUpdraft << " triggerDown = " << triggerDown << std::endl;
-  } else if (deltaUpdraft <= -0.02 && triggerDown == 1 && (time - timeDown) < 3.0)
+  } else if (deltaUpdraft <= -0.005 && triggerDown == 1 && (time - timeDown) < deltaTime)
   {
     turning(direction * 20.0);
     std::cout << "<<<<<<<<< TRIGGER DOWN 1>>>>>>>>> " << "updraft = " <<updraft<< " prev = " << prevUpdraft << std::endl;
   }
-  else if (deltaUpdraft <= -0.02 && triggerDown == 1 && (time - timeDown) >= 3.0) 
+  else if (deltaUpdraft <= -0.005 && triggerDown == 1 && (time - timeDown) >= deltaTime) 
   {
-    turning(direction * 35.0); //steep turn 
-    std::cout << "<<<<<<<<< TURN 35deg >>>>>>>>>" << std::endl;
+    turning(direction * 50.0); //steep turn 
+    std::cout << "<<<<<<<<< TURN 55deg >>>>>>>>> " << x << " " << y << " " << time << std::endl;
   } 
-  else if (deltaUpdraft > 0.03 && triggerUp == 0)
+  else if (deltaUpdraft > 0.01 && triggerUp == 0)
   {
     timeDown = 0.0;
     triggerDown = 0;
@@ -1684,45 +1719,79 @@ void FGAuxiliary::thermalCentering(double updraft, double time, double x, double
     turning(direction * 20.0);
     std::cout << "<<<<<<<<< TRIGGER UP >>>>>>>>> " << deltaUpdraft << std::endl;
   } 
-  else if (deltaUpdraft > 0.02 && triggerUp == 1 && (time - timeUp) < 6.0) {
-    turning(direction * 25.0);
+  else if (deltaUpdraft > 0.005 && triggerUp == 1 && (time - timeUp) < deltaTime) {
+    turning(direction * 20.0);
     std::cout << "<<<<<<<<< TRIGGER Up 1>>>>>>>>> " << deltaUpdraft << std::endl;
   }
-  else if (deltaUpdraft > 0.02 && triggerUp == 1 && (time - timeUp) >= 6.0) 
+  else if (deltaUpdraft > 0.005 && triggerUp == 1 && (time - timeUp) >= deltaTime) 
   {
-    turning(direction * 10.0); 
-    std::cout << "<<<<<<<<< TURN 10deg >>>>>>>>>" << std::endl;
+    turning(direction * 3.0); 
+    std::cout << "<<<<<<<<< TURN 3 deg >>>>>>>>> " << x << " " << y << " " << time << std::endl;
   } else {
     turning(direction * 20.0);
     triggerDown = 0;
     triggerUp = 0;
     timeDown = 0.0;
     timeUp = 0.0;
-    std::cout << "<<<<<<<<< TURN 20deg >>>>>>>>>" << std::endl; //on confirme qu'il faut 25 deg
+    std::cout << "<<<<<<<<< TURN 20deg >>>>>>>>> " << x << " " << y << " " << time << std::endl; //on confirme qu'il faut 25 deg
   }
 
   if ((altInst - altInit) >= 200.0) { //si on a monté assez on sort de la pompe et on continue vers la target
     turn = 0;
     ok = 0;
     goTo(x_t, y_t, x, y);
+    exitTime = time;
+    altInit = 0.0;
+    timeInit = 0.0;
+    rollTest = 0.0;
+    std::cout << "|||||||||||||||||| ON A MONTE DE 200M ||||||||||||||||" << std::endl;
+  } else if ((time - timeInit) >= 300.0) { //si on a monté assez on sort de la pompe et on continue vers la target
+    turn = 0;
+    ok = 0;
+    goTo(x_t, y_t, x, y);
+    exitTime = time;
+    altInit = 0.0;
+    timeInit = 0.0;
+    rollTest = 0.0;
+    std::cout << "|||||||||||||||||| ON A TOURNE 300sec ||||||||||||||||" << std::endl;
+  } else if (updraft <= -0.5) {
+    turn = 0;
+    ok = 0;
+    goTo(x_t, y_t, x, y);
+    altInit = 0.0;
+    timeInit = 0.0;
+    rollTest = 0.0;
+    std::cout << "|||||| UPDRAFT TROP PETIT ||||||| updraft = " << updraft << " " << x << " " << y << std::endl;
+  } else if ((time - timeInit) >= 150.0 && (altInst - altInit) <= 50.0) {
+    turn = 0;
+    ok = 0;
+    goTo(x_t, y_t, x, y);
+    altInit = 0.0;
+    timeInit = 0.0;
+    rollTest = 0.0;
+    std::cout << "|||||||||||||||||| CA DEGAGE ||||||||||||||||" << std::endl;
   }
 
   prevUpdraft = updraft;
 }
 
 void FGAuxiliary::turning(double angle)
-{
+{ 
+  double timeTurn = FDMExec->GetSimTime();
   // Variables de PID
   double roll_error = 0.0;
  
   // Gains PID
   double roll_p_gain = 1.0;
-  double roll_d_gain = 30.0;
+  double roll_d_gain = 42.0;
   double roll_i_gain = 0.03;
  
   double roll_angle = FDMExec->GetPropagate()->GetEuler(1);//* 180/PI;
   double desired_roll_angle = (angle * PI) / 180;
   roll_error = desired_roll_angle - roll_angle;
+  ajouterDonnees("Zzz_rollError", roll_error);
+  ajouterDonnees("Zzz_timeTurn", timeTurn);
+  
  
   // Terme proportionnel
   double p_term = roll_p_gain * roll_error;
@@ -1732,6 +1801,9 @@ void FGAuxiliary::turning(double angle)
     d_term = 0.0;
   } else {
     d_term = roll_d_gain * (roll_error - oldRollTurn);
+    if (abs(roll_error - oldRollTurn) > 0.1) {
+      d_term = 0.0;
+    }
   }
   oldRollTurn = roll_error;
 
@@ -1746,7 +1818,7 @@ void FGAuxiliary::turning(double angle)
   if (aileron_command > 1 ){aileron_command = 1;}
 
   FDMExec->GetFCS()->SetDaCmd(aileron_command);
-  FDMExec->GetFCS()->SetDeCmd(-0.25);
+  FDMExec->GetFCS()->SetDeCmd(-0.3);
 }
 
 } // namespace JSBSim

@@ -193,7 +193,7 @@ bool FGWinds::Run(bool Holding)
 
   FGColumnVector3 addedWind = FDMExec->GetAuxiliary()->getCGWinds()* 3.28084;
 
-  //std::cout << addedWind << std::endl;
+  //std::cout << "Wind " << addedWind << std::endl;
 
   vTotalWindNED = vWindNED + vGustNED + vCosineGust + vTurbulenceNED+ addedWind;
 
@@ -668,121 +668,7 @@ void FGWinds::Debug(int from)
 //       
 //       
 
-void FGWinds::loaduwind() 
-{
-  const int dim1 = 128;  
-  const int dim2 = 257;  
-  const int dim3 = 257;  
 
-  std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/u_aplati.csv");
-
-  if (in.is_open()) {
-      std::cout << "File u opened successfully." << std::endl;
-  } else {
-      std::cerr << "Error u opening file zebi." << std::endl;
-      return;
-  }
-
-  for (int i = 0; i < dim1; ++i) {
-      for (int j = 0; j < dim2; ++j) {
-          for (int k = 0; k < dim3; ++k) {
-              in >> u[i][j][k];
-          }
-      }
-  }
-
-  in.close();
- }
-
-void FGWinds::loadvwind() 
-{
-  const int dim1 = 128;  
-  const int dim2 = 257;  
-  const int dim3 = 257;  
-
-  std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/v_aplati.csv");
-
-  if (in.is_open()) {
-      std::cout << "File v opened successfully." << std::endl;
-  } else {
-      std::cerr << "Error v opening file zebi." << std::endl;
-      return;
-  }
-
-  for (int i = 0; i < dim1; ++i) {
-      for (int j = 0; j < dim2; ++j) {
-          for (int k = 0; k < dim3; ++k) {
-              in >> v[i][j][k];
-          }
-      }
-  }
-
-  in.close();
- }
-
- void FGWinds::loadwwind() 
-{
-  const int dim1 = 128;  
-  const int dim2 = 257;  
-  const int dim3 = 257;  
-
-  std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/w_aplati.csv");
-
-  if (in.is_open()) {
-      std::cout << "File w opened successfully." << std::endl;
-  } else {
-      std::cerr << "Error w opening file zebi." << std::endl;
-      return;
-  }
-
-  for (int i = 0; i < dim1; ++i) {
-      for (int j = 0; j < dim2; ++j) {
-          for (int k = 0; k < dim3; ++k) {
-              in >> w[i][j][k];
-          }
-      }
-  }
-
-  in.close();
- }
-
- void FGWinds::loadgrid() 
-{
-  std::ifstream in("C:/Users/test/Documents/Master_2/Master_Thesis/jsbsim-master/src/models/atmosphere/grid.csv");
-
-  if (in.is_open()) {
-      std::cout << "File grid opened successfully." << std::endl;
-  } else {
-      std::cerr << "Error grid opening file zebi." << std::endl;
-      return;
-  }
-
-  for (int i = 0; i < 3; ++i) {
-
-    if (i == 0 )
-    {
-      for (int j = 0; j < 128; ++j){
-        in >> grid[i][j];
-      }
-    }
-
-    if (i == 1 )
-    {
-      for (int j = 0; j < 257; ++j){
-        in >> grid[i][j];
-      }
-    }
-
-    if (i == 2 )
-    {
-      for (int j = 0; j < 257; ++j){
-        in >> grid[i][j];
-      }
-    }
-  }
-
-  in.close();
-}
 
 
 
