@@ -396,6 +396,8 @@ private:
   void inThermal(double updraft, double time, double x, double y, double x_t, double y_t);
   void thermalCentering(double updraft, double time, double x, double y, double x_t, double y_t);
   void turning(double angle);
+  void exitStrategy(double updraft, double time, double x, double y, double x_t, double y_t);
+  double getPsiError(double x1, double y1, double x2, double y2);
 
   double prevUpdraft;
 
@@ -415,6 +417,12 @@ private:
   int triggerRoll;
   double timeTriggerRoll;
   int closer;
+
+  double altMax = 0.0;
+
+  double East_target;
+  double North_target;
+  int n_target = 1;
   ///////////////
 
   double errorInt;
